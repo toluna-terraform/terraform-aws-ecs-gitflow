@@ -13,7 +13,7 @@ phases:
   build:
     commands:
       - MANIFEST=$(aws ecr batch-get-image --repository-name ${ECR_REPO_NAME} --image-ids imageTag=latest --output json | jq --raw-output '.images[0].imageManifest')
-      - aws ecr put-image --repository-name ${ECR_REPO_NAME} --image-tag "ready_for_${NEXT_ENV}" --image-manifest "$MANIFEST" || true
+      - aws ecr put-image --repository-name ${ECR_REPO_NAME} --image-tag "${ENV_NAME}" --image-manifest "$MANIFEST" || true
   post_build:
     commands:
       - |

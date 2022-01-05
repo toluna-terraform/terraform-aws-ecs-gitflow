@@ -2,7 +2,7 @@ variable "env_name" {
     type = string
 }
 
-variable "next_env" {
+variable "from_env" {
     type = string
 }
 

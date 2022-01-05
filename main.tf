@@ -103,6 +103,7 @@ module "pre" {
   environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { yoyo = "yo" }) }) //TODO: try to replace with file
   buildspec_file                        = templatefile("${path.module}/templates/pre_buildspec.yml.tpl", 
   { ENV = var.env_name,
+    FROM_ENV = var.from_env,
     ECR_REPO_URL = var.ecr_repo_url, 
     ECR_REPO_NAME = var.ecr_repo_name,
     TASK_DEF_NAME = var.task_def_name 
@@ -122,8 +123,7 @@ module "post" {
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
   buildspec_file                        = templatefile("${path.module}/templates/post_buildspec.yml.tpl", 
-  { NEXT_ENV = var.next_env,
-    ECR_REPO_URL = var.ecr_repo_url, 
+  { ECR_REPO_URL = var.ecr_repo_url, 
     ECR_REPO_NAME = var.ecr_repo_name,
     ENV_NAME = var.env_name,
     APP_NAME = var.app_name,

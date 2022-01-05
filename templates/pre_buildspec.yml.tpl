@@ -9,7 +9,7 @@ phases:
       - ECR_LOGIN=$(aws ecr get-login-password)
       - docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
       - CODEBUILD_RESOLVED_SOURCE_VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
-      - IMAGE_TAG="ready_for_${ENV}"
+      - IMAGE_TAG="${FROM_ENV}"
   build:
     commands:
       - printf '[{"name":"%s","imageUri":"%s"}]' "$IMAGE_TAG" "${ECR_REPO_URL}" > image_definitions.json
