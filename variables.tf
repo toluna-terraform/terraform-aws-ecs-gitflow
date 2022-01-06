@@ -10,6 +10,10 @@ variable "app_name" {
     type = string
 }
 
+variable "env_type" {
+    type = string
+}
+
 variable "ecr_repo_url" {
     type = string 
 }

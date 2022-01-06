@@ -7,7 +7,7 @@ data "aws_s3_bucket" "codepipeline_bucket" {
 }
 
 data "aws_s3_bucket" "source_bucket" {
-  bucket = "s3-source-codebuild-${var.app_name}-${var.env_name}"
+  bucket = "s3-codepipeline-${var.app_name}-${var.env_type}"
 }
 
 data "aws_ssm_parameter" "codepipeline_connection_arn" {

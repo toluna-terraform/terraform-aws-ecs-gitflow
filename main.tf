@@ -6,25 +6,26 @@ module "source" {
   source = "./modules/source"
   env_name = var.env_name
   app_name = var.app_name
+  env_type = var.env_type
   trigger_branch = var.trigger_branch
   pipeline_type = var.pipeline_type
   source_repository = var.source_repository
   #file_path_regex = "^((?!terraform).)*$"
-  file_path_regex = "/service*/gm"
+  file_path_regex = "^service.*"
 }
 
 module "ci-code-pipeline" {
   source                       = "./modules/ci-codepipeline"
   env_name                     = var.env_name
   app_name                     = var.app_name
+  env_type                     = var.env_type
   pipeline_type                = var.pipeline_type
   source_repository            = var.source_repository
-  s3_bucket                    = aws_s3_bucket.codepipeline_bucket.bucket
+  s3_bucket                    = "s3-codepipeline-${var.app_name}-${var.env_type}"
   build_codebuild_projects     = [module.build[0].attributes.name]
   post_codebuild_projects      = [module.post.attributes.name]
   code_deploy_applications     = [module.code-deploy.attributes.name]
   depends_on = [
-    aws_s3_bucket.codepipeline_bucket,
     module.build,
     module.code-deploy,
     module.post
@@ -37,14 +38,14 @@ module "cd-code-pipeline" {
   source                       = "./modules/cd-codepipeline"
   env_name                     = var.env_name
   app_name                     = var.app_name
+  env_type                     = var.env_type
   pipeline_type                = var.pipeline_type
   source_repository            = var.source_repository
   pre_codebuild_projects     = [module.pre.attributes.name]
   post_codebuild_projects      = [module.post.attributes.name]
-  s3_bucket                    = aws_s3_bucket.codepipeline_bucket.bucket
+  s3_bucket                    = "s3-codepipeline-${var.app_name}-${var.env_type}"
   code_deploy_applications     = [module.code-deploy.attributes.name]
   depends_on = [
-    aws_s3_bucket.codepipeline_bucket,
     module.code-deploy
   ]
   count = var.pipeline_type == "cd" ? 1 : 0
@@ -53,9 +54,10 @@ module "cd-code-pipeline" {
 module "build" {
   source                                = "./modules/build"
   env_name                              = var.env_name
+  env_type                              = var.env_type
   codebuild_name                        = "build-${var.app_name}"
-  source_repository            = var.source_repository
-  s3_bucket                             = aws_s3_bucket.codepipeline_bucket.bucket
+  source_repository                     = var.source_repository
+  s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
   environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { yoyo = "yo" }) }) //TODO: try to replace with file
@@ -67,10 +69,6 @@ module "build" {
     TASK_DEF_NAME = var.task_def_name, 
     ADO_USER = data.aws_ssm_parameter.ado_user.value, 
     ADO_PASSWORD = data.aws_ssm_parameter.ado_password.value })
-
-  depends_on = [
-    aws_s3_bucket.codepipeline_bucket,
-  ]
   count = var.pipeline_type == "ci" ? 1 : 0
 }
 
@@ -78,8 +76,9 @@ module "build" {
 module "code-deploy" {
   source             = "./modules/codedeploy"
   env_name           = var.env_name
+  env_type           = var.env_type
   pipeline_type      = var.pipeline_type
-  s3_bucket          = aws_s3_bucket.codepipeline_bucket.bucket
+  s3_bucket          = "s3-codepipeline-${var.app_name}-${var.env_type}"
   ecs_service_name   = var.ecs_service_name
   ecs_cluster_name   = var.ecs_cluster_name
   alb_listener_arn   = var.alb_listener_arn
@@ -87,17 +86,15 @@ module "code-deploy" {
   alb_tg_green_name  = var.alb_tg_green_name
   ecs_iam_roles_arns = var.ecs_iam_roles_arns
 
-  depends_on = [
-    aws_s3_bucket.codepipeline_bucket
-  ]
 }
 
 module "pre" {
   source                                = "./modules/pre"
   env_name                              = var.env_name
+  env_type                              = var.env_type
   codebuild_name                        = "pre-${var.app_name}"
   source_repository                     = var.source_repository
-  s3_bucket                             = aws_s3_bucket.codepipeline_bucket.bucket
+  s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
   environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { yoyo = "yo" }) }) //TODO: try to replace with file
@@ -108,18 +105,15 @@ module "pre" {
     ECR_REPO_NAME = var.ecr_repo_name,
     TASK_DEF_NAME = var.task_def_name 
     })
-
-  depends_on = [
-    aws_s3_bucket.codepipeline_bucket,
-  ]
 }
 
 module "post" {
   source                                = "./modules/post"
   env_name                              = var.env_name
+  env_type                              = var.env_type
   codebuild_name                        = "post-${var.app_name}"
   source_repository                     = var.source_repository
-  s3_bucket                             = aws_s3_bucket.codepipeline_bucket.bucket
+  s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
   buildspec_file                        = templatefile("${path.module}/templates/post_buildspec.yml.tpl", 
@@ -130,19 +124,5 @@ module "post" {
     UPDATE_BITBUCKET = templatefile("${path.module}/templates/update_bitbucket.sh.tpl", { APP_NAME = var.app_name })
     })
 
-  depends_on = [
-    aws_s3_bucket.codepipeline_bucket,
-  ]
-}
-
-
-resource "aws_s3_bucket" "codepipeline_bucket" {
-  bucket        = "s3-codepipeline-${var.app_name}-${var.env_name}"
-  acl           = "private"
-  force_destroy = true
-  tags = tomap({
-    UseWithCodeDeploy = true
-    created_by        = "terraform"
-  })
 }
 
