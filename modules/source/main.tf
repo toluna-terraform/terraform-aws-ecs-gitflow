@@ -53,7 +53,7 @@ resource "aws_codebuild_project" "source_codebuild" {
     packaging = "ZIP"
     type      = "S3"
     override_artifact_name = true
-    location  = aws_s3_bucket.source_codebuild_bucket.bucket
+    location  = "s3-codepipeline-${var.app_name}-${var.env_type}"
   }
 
   environment {
@@ -93,22 +93,8 @@ resource "aws_iam_role_policy_attachment" "source_codebuild_iam_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess" // this policy should be changed to a new policy.
 }
 
-resource "aws_s3_bucket" "source_codebuild_bucket" {
-  bucket        = "s3-source-codebuild-${var.app_name}-${var.env_name}"
-  acl           = "private"
-  force_destroy = true
-  tags = tomap({
-    UseWithCodeDeploy = true
-    created_by        = "terraform"
-  })
-  versioning {
-    enabled = true
-  }
-}
-
-
 resource "aws_s3_bucket_object" "folder" {
-    bucket = aws_s3_bucket.source_codebuild_bucket.bucket
+    bucket = "s3-codepipeline-${var.app_name}-${var.env_type}"
     acl    = "private"
     key    = var.pipeline_type
 }

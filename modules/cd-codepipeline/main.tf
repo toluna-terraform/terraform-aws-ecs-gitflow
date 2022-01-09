@@ -1,6 +1,6 @@
 locals {
   repository_name       = split("/", var.source_repository)[1]
-  artifacts_bucket_name = "s3-codepipeline-${local.repository_name}-${var.env_name}"
+  artifacts_bucket_name = "s3-codepipeline-${var.app_name}-${var.env_type}"
   codepipeline_name     = "codepipeline-${var.pipeline_type}-${local.repository_name}-${var.env_name}"
 }
 
@@ -24,8 +24,8 @@ resource "aws_codepipeline" "codepipeline" {
       output_artifacts = ["source_output"]
 
       configuration = {
-        S3Bucket = "s3-source-codebuild-${var.app_name}-${var.env_name}"
-        S3ObjectKey = "cd/source_artifacts.zip"
+        S3Bucket = "s3-codepipeline-${var.app_name}-${var.env_type}"
+        S3ObjectKey = "${trimsuffix(trimsuffix(var.env_name, "-green"),"-blue")}/cd/source_artifacts.zip"
         PollForSourceChanges = true
         
       }

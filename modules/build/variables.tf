@@ -2,6 +2,10 @@
      type     = string
  }
 
+variable "env_type" {
+  type = string
+}
+
 variable "codebuild_name" {
     type = string
   
