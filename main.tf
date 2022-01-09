@@ -50,6 +50,24 @@ module "cd-code-pipeline" {
   count = var.pipeline_type == "cd" ? 1 : 0
 }
 
+module "ci-cd-code-pipeline" {
+  source                       = "./modules/ci-cd-codepipeline"
+  env_name                     = var.env_name
+  app_name                     = var.app_name
+  pipeline_type                = var.pipeline_type
+  source_repository            = var.source_repository
+  pre_codebuild_projects     = [module.pre.attributes.name]
+  post_codebuild_projects      = [module.post.attributes.name]
+  s3_bucket                    = aws_s3_bucket.codepipeline_bucket.bucket
+  build_codebuild_projects     = [module.build[0].attributes.name]
+  code_deploy_applications     = [module.code-deploy.attributes.name]
+  depends_on = [
+    aws_s3_bucket.codepipeline_bucket,
+    module.code-deploy
+  ]
+  count = var.pipeline_type == "ci-cd" ? 1 : 0
+}
+
 module "build" {
   source                                = "./modules/build"
   env_name                              = var.env_name
