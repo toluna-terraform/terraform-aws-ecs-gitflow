@@ -18,6 +18,10 @@ variable "post_codebuild_projects" {
     type = list(string)
 }
 
+variable "pre_codebuild_projects" {
+    type = list(string)
+}
+
 variable "code_deploy_applications" {
     type = list(string)
 }

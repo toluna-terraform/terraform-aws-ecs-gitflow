@@ -1,7 +1,5 @@
 locals {
-  repository_name       = split("/", var.source_repository)[1]
-  artifacts_bucket_name = "s3-codepipeline-${local.repository_name}-${var.env_name}"
-  codepipeline_name     = "codepipeline-${var.pipeline_type}-${local.repository_name}-${var.env_name}"
+  codepipeline_name     = "codepipeline-${var.app_name}-${var.env_name}"
 }
 
 resource "aws_codepipeline" "codepipeline" {
@@ -24,18 +22,19 @@ resource "aws_codepipeline" "codepipeline" {
       output_artifacts = ["source_output"]
 
       configuration = {
-        S3Bucket = "s3-source-codebuild-${var.app_name}-${var.env_name}"
-        S3ObjectKey = "ci/source_artifacts.zip"
+        S3Bucket = "${var.s3_bucket}"
+        S3ObjectKey = "${var.env_name}/source_artifacts.zip"
         PollForSourceChanges = true
         
       }
     }
   }
 
-    stage {
-    name = "Pre"
+
+  stage {
+    name = "CI"
     dynamic "action" {
-      for_each = var.pre_codebuild_projects
+      for_each = var.build_codebuild_projects
       content {
         name             = action.value
         category         = "Build"
@@ -43,7 +42,7 @@ resource "aws_codepipeline" "codepipeline" {
         provider         = "CodeBuild"
         input_artifacts  = ["source_output"]
         version          = "1"
-        output_artifacts = ["build_output"]
+        output_artifacts = ["ci_output"]
 
         configuration = {
           ProjectName = action.value
@@ -54,18 +53,19 @@ resource "aws_codepipeline" "codepipeline" {
     }
   }
 
-  stage {
-    name = "Build"
+
+    stage {
+    name = "Pre-Deploy"
     dynamic "action" {
-      for_each = var.build_codebuild_projects
+      for_each = var.pre_codebuild_projects
       content {
         name             = action.value
         category         = "Build"
         owner            = "AWS"
         provider         = "CodeBuild"
-        input_artifacts  = ["source_output"]
+        input_artifacts  = ["ci_output"]
         version          = "1"
-        output_artifacts = ["build_output"]
+        output_artifacts = ["cd_output"]
 
         configuration = {
           ProjectName = action.value
@@ -85,7 +85,7 @@ resource "aws_codepipeline" "codepipeline" {
         category        = "Deploy"
         owner           = "AWS"
         provider        = "CodeDeployToECS"
-        input_artifacts = ["build_output"]
+        input_artifacts = ["cd_output"]
         version         = "1"
         configuration = {
           ApplicationName = action.value
