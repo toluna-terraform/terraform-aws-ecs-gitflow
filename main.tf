@@ -60,7 +60,7 @@ module "build" {
   s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
-  environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}" }) }) //TODO: try to replace with file
+  environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { yoyo = "yo" }) }) //TODO: try to replace with file
   buildspec_file                        = templatefile("buildspec.yml.tpl", 
   { IMAGE_URI = local.image_uri, 
     DOCKERFILE_PATH = var.dockerfile_path, 
@@ -97,7 +97,7 @@ module "pre" {
   s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
-  environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}" }) }) //TODO: try to replace with file
+  environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { yoyo = "yo" }) }) //TODO: try to replace with file
   buildspec_file                        = templatefile("${path.module}/templates/pre_buildspec.yml.tpl", 
   { ENV = var.env_name,
     FROM_ENV = var.from_env,

@@ -13,16 +13,5 @@
                 }               
             }
         }
-    ],
-    "Hooks": [
-		{
-			"AfterAllowTestTraffic": "${APP_NAME}-${ENV_TYPE}-test-framework"
-		},
-		{
-			"BeforeAllowTraffic": "${APP_NAME}-${ENV_TYPE}-test-framework"
-		},
-		{
-			"AfterAllowTraffic": "${APP_NAME}-${ENV_TYPE}-test-framework"
-		}
-	]
+    ]
 }
