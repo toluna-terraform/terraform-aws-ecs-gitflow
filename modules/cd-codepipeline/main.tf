@@ -25,7 +25,7 @@ resource "aws_codepipeline" "codepipeline" {
 
       configuration = {
         S3Bucket = "s3-codepipeline-${var.app_name}-${var.env_type}"
-        S3ObjectKey = "${trimsuffix(trimsuffix(var.env_name, "-green"),"-blue")}/cd/source_artifacts.zip"
+        S3ObjectKey = "${trimsuffix(trimsuffix(var.env_name, "-green"),"-blue")}/source_artifacts.zip"
         PollForSourceChanges = true
         
       }
