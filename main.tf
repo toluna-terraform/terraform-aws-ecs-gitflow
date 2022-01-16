@@ -3,6 +3,19 @@ locals {
   artifacts_bucket_name = "s3-codepipeline-${var.app_name}-${var.env_type}"
 }
 
+module "source" {
+  source = "./modules/source"
+  env_name = var.env_name
+  app_name = var.app_name
+  env_type = var.env_type
+  trigger_branch = var.trigger_branch
+  pipeline_type = var.pipeline_type
+  source_repository = var.source_repository
+  #file_path_regex = "^((?!terraform).)*$"
+  file_path_regex = "^service.*"
+
+  count = var.pipeline_type != "ci-cd" ? 1 : 0
+}
 module "ci-cd-code-pipeline" {
   source                       = "./modules/ci-cd-codepipeline"
   env_name                     = var.env_name
