@@ -1,7 +1,5 @@
 locals {
-  repository_name       = split("/", var.source_repository)[1]
-  artifacts_bucket_name = "s3-codepipeline-${var.app_name}-${var.env_type}"
-  codepipeline_name     = "codepipeline-${var.pipeline_type}-${local.repository_name}-${var.env_name}"
+  codepipeline_name     = "codepipeline-${var.app_name}-${var.env_name}"
 }
 
 resource "aws_codepipeline" "codepipeline" {
@@ -24,13 +22,36 @@ resource "aws_codepipeline" "codepipeline" {
       output_artifacts = ["source_output"]
 
       configuration = {
-        S3Bucket = "s3-codepipeline-${var.app_name}-${var.env_type}"
-        S3ObjectKey = "${trimsuffix(trimsuffix(var.env_name, "-green"),"-blue")}/source_artifacts.zip"
+        S3Bucket = "${var.s3_bucket}"
+        S3ObjectKey = "${var.env_name}/source_artifacts.zip" 
         PollForSourceChanges = true
-        
       }
     }
   }
+
+
+  stage {
+    name = "CI"
+    dynamic "action" {
+      for_each = var.build_codebuild_projects
+      content {
+        name             = action.value
+        category         = "Build"
+        owner            = "AWS"
+        provider         = "CodeBuild"
+        input_artifacts  = ["source_output"]
+        version          = "1"
+        output_artifacts = ["ci_output"]
+
+        configuration = {
+          ProjectName = action.value
+        }
+
+      }
+
+    }
+  }
+
 
     stage {
     name = "Pre-Deploy"
@@ -41,9 +62,9 @@ resource "aws_codepipeline" "codepipeline" {
         category         = "Build"
         owner            = "AWS"
         provider         = "CodeBuild"
-        input_artifacts  = ["source_output"]
+        input_artifacts  = ["ci_output"]
         version          = "1"
-        output_artifacts = ["build_output"]
+        output_artifacts = ["cd_output"]
 
         configuration = {
           ProjectName = action.value
@@ -63,20 +84,20 @@ resource "aws_codepipeline" "codepipeline" {
         category        = "Deploy"
         owner           = "AWS"
         provider        = "CodeDeployToECS"
-        input_artifacts  = ["build_output"]
-        version          = "1"
+        input_artifacts = ["cd_output"]
+        version         = "1"
         configuration = {
           ApplicationName = action.value
           DeploymentGroupName = "ecs-deploy-group-${var.env_name}"
-          TaskDefinitionTemplateArtifact = "build_output"
-          AppSpecTemplateArtifact = "build_output"
+          TaskDefinitionTemplateArtifact = "cd_output"
+          AppSpecTemplateArtifact = "cd_output"
           
         }
       }
     }
   }
 
-  stage {
+    stage {
     name = "Post-Deploy"
     dynamic "action" {
       for_each = var.post_codebuild_projects
@@ -100,12 +121,12 @@ resource "aws_codepipeline" "codepipeline" {
 }
 
 resource "aws_iam_role" "codepipeline_role" {
-  name               = "${local.codepipeline_name}-role"
+  name               = "role-${local.codepipeline_name}"
   assume_role_policy = data.aws_iam_policy_document.codepipeline_assume_role_policy.json
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
-  name   = "codepipeline_policy"
+  name   = "policy-${local.codepipeline_name}"
   role   = aws_iam_role.codepipeline_role.id
   policy = data.aws_iam_policy_document.codepipeline_role_policy.json
 }

@@ -8,12 +8,23 @@ phases:
       - CODEBUILD_RESOLVED_SOURCE_VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
       - COMMENT="Pipeline has been done successfully."
       - PR_NUMBER=$(cat pr.txt)
+      - SRC_CHANGED=$(cat src_changed.txt)
       - USER=$(echo $(aws ssm get-parameter --name /app/bb_user --with-decryption) | python3 -c "import sys, json; print(json.load(sys.stdin)['Parameter']['Value'])")
       - PASS=$(echo $(aws ssm get-parameter --name /app/bb_pass --with-decryption) | python3 -c "import sys, json; print(json.load(sys.stdin)['Parameter']['Value'])")
   build:
     commands:
-      - MANIFEST=$(aws ecr batch-get-image --repository-name ${ECR_REPO_NAME} --image-ids imageTag=latest --output json | jq --raw-output '.images[0].imageManifest')
-      - aws ecr put-image --repository-name ${ECR_REPO_NAME} --image-tag "${ENV_NAME}" --image-manifest "$MANIFEST" || true
+      - |
+         if [ "$SRC_CHANGED" = "true" ]; then
+           DEPLOYED_TAG="${FROM_ENV}";
+           MANIFEST=$(aws ecr batch-get-image --repository-name ${ECR_REPO_NAME} --image-ids imageTag=$DEPLOYED_TAG --output json | jq --raw-output '.images[0].imageManifest')
+           aws ecr put-image --repository-name ${ECR_REPO_NAME} --image-tag "${ENV_NAME}" --image-manifest "$MANIFEST" || true
+         fi
+      - |
+         if [ "$SRC_CHANGED" = "false" ]; then
+           DEPLOYED_TAG="${ENV_NAME}";
+           echo "Image already has $DEPLOYED_TAG tag."
+         fi
+
   post_build:
     commands:
       - |

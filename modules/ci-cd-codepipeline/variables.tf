@@ -2,14 +2,6 @@ variable "env_name" {
     type = string
 }
 
-variable "env_type" {
-  type = string
-}
-
-variable "pipeline_type" {
-  type = string
-}
-
 variable "source_repository" {
     type = string
 }
@@ -19,6 +11,10 @@ variable "build_codebuild_projects" {
 }
 
 variable "post_codebuild_projects" {
+    type = list(string)
+}
+
+variable "pre_codebuild_projects" {
     type = list(string)
 }
 
