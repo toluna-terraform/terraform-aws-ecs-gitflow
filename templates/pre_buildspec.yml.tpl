@@ -6,10 +6,24 @@ phases:
       docker: 18
   pre_build:
     commands:
-      - ECR_LOGIN=$(aws ecr get-login-password)
-      - docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
-      - CODEBUILD_RESOLVED_SOURCE_VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
-      - IMAGE_TAG="${FROM_ENV}"
+      - BUILD_CONDITION=$(cat build.txt)
+      - PR_NUMBER=$(cat pr.txt)
+      - SRC_CHANGED=$(cat src_changed.txt)
+      - IMAGE_TAG=$(cat image_tag.txt)
+
+      - |
+         if [ "$BUILD_CONDITION" = "false" ] && [ "$SRC_CHANGED" = "true" ]; then
+           ECR_LOGIN=$(aws ecr get-login-password)
+           docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
+           IMAGE_TAG="${FROM_ENV}";
+         fi
+
+      - |
+         if [ "$SRC_CHANGED" = "false" ]; then
+           IMAGE_TAG="${ENV_NAME}";
+         fi
+
+
   build:
     commands:
       - printf '[{"name":"%s","imageUri":"%s"}]' "$IMAGE_TAG" "${ECR_REPO_URL}" > image_definitions.json
@@ -23,6 +37,8 @@ phases:
 
       - sed -i "s+<TASKDEF_ARN>+$var+g" appspec.json
       - sed -i "s+<CONTAINER_NAME>+${TASK_DEF_NAME}+g" appspec.json
+
+          
 
 artifacts:
   files:
