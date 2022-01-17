@@ -90,8 +90,8 @@ resource "aws_codepipeline" "codepipeline" {
         configuration = {
           ApplicationName = action.value
           DeploymentGroupName = "ecs-deploy-group-${var.env_name}"
-          TaskDefinitionTemplateArtifact = "build_output"
-          AppSpecTemplateArtifact = "build_output"
+          TaskDefinitionTemplateArtifact = "cd_output"
+          AppSpecTemplateArtifact = "cd_output"
           
         }
       }
@@ -122,12 +122,12 @@ resource "aws_codepipeline" "codepipeline" {
 }
 
 resource "aws_iam_role" "codepipeline_role" {
-  name               = "${local.codepipeline_name}-role"
+  name               = "role-${local.codepipeline_name}"
   assume_role_policy = data.aws_iam_policy_document.codepipeline_assume_role_policy.json
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
-  name   = "codepipeline_policy"
+  name   = "policy-${local.codepipeline_name}"
   role   = aws_iam_role.codepipeline_role.id
   policy = data.aws_iam_policy_document.codepipeline_role_policy.json
 }
