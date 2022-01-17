@@ -122,6 +122,7 @@ module "pre" {
   buildspec_file                        = templatefile("${path.module}/templates/pre_buildspec.yml.tpl", 
   { ENV_NAME = var.env_name,
     APP_NAME = var.app_name,
+    ENV_TYPE = var.env_type,
     FROM_ENV = var.from_env,
     ECR_REPO_URL = var.ecr_repo_url, 
     ECR_REPO_NAME = var.ecr_repo_name,
