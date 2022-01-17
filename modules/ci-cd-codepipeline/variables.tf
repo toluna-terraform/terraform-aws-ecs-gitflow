@@ -2,10 +2,6 @@ variable "env_name" {
     type = string
 }
 
-variable "pipeline_type" {
-  type = string
-}
-
 variable "source_repository" {
     type = string
 }

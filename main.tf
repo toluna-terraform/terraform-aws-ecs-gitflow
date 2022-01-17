@@ -3,26 +3,12 @@ locals {
   artifacts_bucket_name = "s3-codepipeline-${var.app_name}-${var.env_type}"
 }
 
-module "source" {
-  source = "./modules/source"
-  env_name = var.env_name
-  app_name = var.app_name
-  env_type = var.env_type
-  trigger_branch = var.trigger_branch
-  pipeline_type = var.pipeline_type
-  source_repository = var.source_repository
-  #file_path_regex = "^((?!terraform).)*$"
-  file_path_regex = "^service.*"
-
-  count = var.pipeline_type != "ci-cd" ? 1 : 0
-}
 module "ci-cd-code-pipeline" {
   source                       = "./modules/ci-cd-codepipeline"
   env_name                     = var.env_name
   app_name                     = var.app_name
-  pipeline_type                = var.pipeline_type
   source_repository            = var.source_repository
-  s3_bucket                    = "s3-codepipeline-${var.app_name}-${var.env_type}"
+  s3_bucket                    = local.artifacts_bucket_name
   build_codebuild_projects     = [module.build.attributes.name]
   post_codebuild_projects      = [module.post.attributes.name]
   pre_codebuild_projects       = [module.pre.attributes.name]
@@ -33,45 +19,8 @@ module "ci-cd-code-pipeline" {
     module.post,
     module.pre
   ]
-  count = var.pipeline_type == "ci-cd" ? 1 : 0
 }
 
-module "ci-code-pipeline" {
-  source                       = "./modules/ci-codepipeline"
-  env_name                     = var.env_name
-  app_name                     = var.app_name
-  env_type                     = var.env_type
-  pipeline_type                = var.pipeline_type
-  source_repository            = var.source_repository
-  s3_bucket                    = "s3-codepipeline-${var.app_name}-${var.env_type}"
-  build_codebuild_projects     = [module.build[0].attributes.name]
-  post_codebuild_projects      = [module.post.attributes.name]
-  code_deploy_applications     = [module.code-deploy.attributes.name]
-  depends_on = [
-    module.build,
-    module.code-deploy,
-    module.post
-  ]
-  count = var.pipeline_type == "ci" ? 1 : 0
-}
-
-
-module "cd-code-pipeline" {
-  source                       = "./modules/cd-codepipeline"
-  env_name                     = var.env_name
-  app_name                     = var.app_name
-  env_type                     = var.env_type
-  pipeline_type                = var.pipeline_type
-  source_repository            = var.source_repository
-  pre_codebuild_projects     = [module.pre.attributes.name]
-  post_codebuild_projects      = [module.post.attributes.name]
-  s3_bucket                    = "s3-codepipeline-${var.app_name}-${var.env_type}"
-  code_deploy_applications     = [module.code-deploy.attributes.name]
-  depends_on = [
-    module.code-deploy
-  ]
-  count = var.pipeline_type == "cd" ? 1 : 0
-}
 
 module "build" {
   source                                = "./modules/build"
@@ -98,7 +47,6 @@ module "code-deploy" {
   source             = "./modules/codedeploy"
   env_name           = var.env_name
   env_type           = var.env_type
-  pipeline_type      = var.pipeline_type
   s3_bucket          = "s3-codepipeline-${var.app_name}-${var.env_type}"
   ecs_service_name   = var.ecs_service_name
   ecs_cluster_name   = var.ecs_cluster_name

@@ -6,10 +6,6 @@ variable "env_type" {
   type = string
 }
 
-variable "pipeline_type" {
-  type = string
-}
-
 variable "s3_bucket" {
   type = string
 }
