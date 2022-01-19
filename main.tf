@@ -33,7 +33,9 @@ module "build" {
   environment_variables_parameter_store = var.environment_variables_parameter_store
   environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}" }) }) //TODO: try to replace with file
   buildspec_file                        = templatefile("buildspec.yml.tpl", 
-  { IMAGE_URI = local.image_uri, 
+  { APP_NAME = var.app_name,
+    ENV_TYPE = var.env_type,
+    IMAGE_URI = local.image_uri, 
     DOCKERFILE_PATH = var.dockerfile_path, 
     ECR_REPO_URL = var.ecr_repo_url, 
     ECR_REPO_NAME = var.ecr_repo_name,
@@ -78,6 +80,26 @@ module "pre" {
     })
 }
 
+module "test_reports" {
+  source                                = "./modules/test_reports"
+  app_name                              = var.app_name
+  env_name                              = var.env_name
+  env_type                              = var.env_type
+  codebuild_name                        = "tests-reports-${var.app_name}"
+  source_repository                     = var.source_repository
+  s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
+  privileged_mode                       = true
+  environment_variables_parameter_store = var.environment_variables_parameter_store
+  buildspec_file                        = templatefile("${path.module}/templates/test_buildspec.yml.tpl", 
+  { ECR_REPO_URL = var.ecr_repo_url, 
+    ECR_REPO_NAME = var.ecr_repo_name,
+    ENV_NAME = var.env_name,
+    FROM_ENV = var.from_env,
+    APP_NAME = var.app_name,
+    })
+
+}
+
 module "post" {
   source                                = "./modules/post"
   env_name                              = var.env_name
@@ -93,7 +115,7 @@ module "post" {
     ENV_NAME = var.env_name,
     FROM_ENV = var.from_env,
     APP_NAME = var.app_name,
-    UPDATE_BITBUCKET = templatefile("${path.module}/templates/update_bitbucket.sh.tpl", { APP_NAME = var.app_name })
+    UPDATE_BITBUCKET = templatefile("${path.module}/templates/update_bitbucket.sh.tpl", { APP_NAME = var.app_name,ENV_NAME = var.env_name, ENV_TYPE = var.env_type })
     })
 
 }

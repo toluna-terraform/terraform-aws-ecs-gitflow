@@ -29,7 +29,6 @@ phases:
       - printf '[{"name":"%s","imageUri":"%s"}]' "$IMAGE_TAG" "${ECR_REPO_URL}" > image_definitions.json
       - aws ecs describe-task-definition --task-definition ${TASK_DEF_NAME} --query "taskDefinition" --output json > taskdef.json
       - export var=$(aws ecs describe-task-definition --task-definition ${TASK_DEF_NAME} --query "taskDefinition.taskDefinitionArn" --output text)
-      - aws s3 cp tests/postman s3://${APP_NAME}-${ENV_TYPE}-postman-tests/ --recursive
       - echo $APPSPEC > appspec.json
 
       - previous_version=$(cut -d ":" -f7 <<< $var)
