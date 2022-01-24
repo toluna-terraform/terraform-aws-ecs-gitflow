@@ -24,7 +24,7 @@ phases:
     commands:
       - printf '[{"name":"%s","imageUri":"%s"}]' "$IMAGE_TAG" "${ECR_REPO_URL}" > image_definitions.json
       - aws ecs describe-task-definition --task-definition ${TASK_DEF_NAME} --query "taskDefinition" --output json > taskdef.json
-      - sed -i -E 's/chorus-main:.*"/chorus-main:'$IMAGE_TAG'"/' taskdef.json
+      - sed -i -E 's/'$APP_NAME'-main:.*"/'$APP_NAME'-main:'$IMAGE_TAG'"/' taskdef.json
       
       - export var=$(aws ecs describe-task-definition --task-definition ${TASK_DEF_NAME} --query "taskDefinition.taskDefinitionArn" --output text)
       - echo $APPSPEC > appspec.json
