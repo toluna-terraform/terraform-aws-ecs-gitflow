@@ -23,7 +23,7 @@ resource "aws_codepipeline" "codepipeline" {
 
       configuration = {
         S3Bucket = "${var.s3_bucket}"
-        S3ObjectKey = "${split("-",var.env_name)[0]}/source_artifacts.zip" 
+        S3ObjectKey = "${var.env_name}/source_artifacts.zip" 
         PollForSourceChanges = true
       }
     }
