@@ -14,4 +14,12 @@
             }
         }
     ]
+    %{ if HOOKS }
+    ,
+    "Hooks": [
+		{
+			"BeforeAllowTraffic": "${APP_NAME}-${ENV_TYPE}-test-framework"
+		}
+	]
+    %{ endif }
 }

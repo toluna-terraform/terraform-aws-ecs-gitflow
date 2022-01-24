@@ -1,5 +1,10 @@
 version: 0.2
 
+env:
+  parameter-store:
+    USER: "/app/bb_user"  
+    PASS: "/app/bb_app_pass"
+
 phases:
   pre_build:
     commands:
@@ -9,8 +14,6 @@ phases:
       - COMMENT="Pipeline has been done successfully."
       - PR_NUMBER=$(cat pr.txt)
       - SRC_CHANGED=$(cat src_changed.txt)
-      - USER=$(echo $(aws ssm get-parameter --name /app/bb_user --with-decryption) | python3 -c "import sys, json; print(json.load(sys.stdin)['Parameter']['Value'])")
-      - PASS=$(echo $(aws ssm get-parameter --name /app/bb_pass --with-decryption) | python3 -c "import sys, json; print(json.load(sys.stdin)['Parameter']['Value'])")
   build:
     commands:
       - |

@@ -99,3 +99,8 @@ resource "aws_iam_role_policy" "ecs_policy" {
   role = aws_iam_role.codedeploy_role.id
   policy = data.aws_iam_policy_document.codedeploy_role_policy.json
 }
+
+resource "aws_iam_role_policy_attachment" "role-lambda-execution" {
+    role       = "${aws_iam_role.codedeploy_role.name}"
+    policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
