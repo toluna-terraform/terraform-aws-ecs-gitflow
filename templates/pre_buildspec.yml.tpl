@@ -6,7 +6,7 @@ phases:
       docker: 18
   pre_build:
     commands:
-      - BUILD_CONDITION=$(cat build.txt)
+      - BUILD_CONDITION=$(cat ci.txt)
       - PR_NUMBER=$(cat pr.txt)
       - SRC_CHANGED=$(cat src_changed.txt)
       - IMAGE_TAG=$(cat image_tag.txt)
