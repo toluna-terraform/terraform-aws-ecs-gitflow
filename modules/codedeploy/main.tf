@@ -42,6 +42,10 @@ resource "aws_codedeploy_deployment_group" "deployment_group" {
         listener_arns = [var.alb_listener_arn]
       }
 
+      test_traffic_route {
+        listener_arns = [var.alb_test_listener_arn]
+      }
+
       target_group {
         name = var.alb_tg_blue_name 
       }
@@ -52,7 +56,6 @@ resource "aws_codedeploy_deployment_group" "deployment_group" {
     }
   }
 }
-
 
 resource "aws_iam_role" "codedeploy_role" {
   name = "role-codedeploy-chorus-${var.env_name}"

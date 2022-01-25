@@ -53,6 +53,7 @@ module "code-deploy" {
   ecs_service_name   = var.ecs_service_name
   ecs_cluster_name   = var.ecs_cluster_name
   alb_listener_arn   = var.alb_listener_arn
+  alb_test_listener_arn   = var.alb_test_listener_arn
   alb_tg_blue_name   = var.alb_tg_blue_name
   alb_tg_green_name  = var.alb_tg_green_name
   ecs_iam_roles_arns = var.ecs_iam_roles_arns

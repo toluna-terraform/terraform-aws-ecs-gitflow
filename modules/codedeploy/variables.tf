@@ -22,6 +22,10 @@ variable "alb_listener_arn" {
   type = string
 }
 
+variable "alb_test_listener_arn" {
+     type = string
+ }
+ 
 variable "alb_tg_blue_name" {
   type = string
 }
