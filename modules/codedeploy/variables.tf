@@ -37,3 +37,7 @@ variable "alb_tg_green_name" {
 variable "ecs_iam_roles_arns" {
   type = list(string)
 }
+
+variable "termination_wait_time_in_minutes" {
+  default = 120
+}

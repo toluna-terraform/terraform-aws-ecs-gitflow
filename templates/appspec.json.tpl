@@ -13,13 +13,15 @@
                 }               
             }
         }
-    ]
-    %{ if HOOKS }
-    ,
+    ],
     "Hooks": [
+        %{ if HOOKS }
+        {
+            "AfterAllowTestTraffic": "${APP_NAME}-${ENV_TYPE}-test-framework"
+        },
+        %{ endif }
 		{
-			"AfterAllowTestTraffic": "${APP_NAME}-${ENV_TYPE}-test-framework"
-		}
-	]
-    %{ endif }
+            "BeforeAllowTraffic": "${APP_NAME}-${ENV_TYPE}-merge-waiter"
+        }
+    ]
 }

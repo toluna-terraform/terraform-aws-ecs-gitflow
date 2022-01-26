@@ -93,3 +93,7 @@ variable "environment_variables" {
 variable "pipeline_type" {
   type = string
 }
+
+variable "termination_wait_time_in_minutes" {
+  default = 120
+}

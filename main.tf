@@ -57,7 +57,7 @@ module "code-deploy" {
   alb_tg_blue_name   = var.alb_tg_blue_name
   alb_tg_green_name  = var.alb_tg_green_name
   ecs_iam_roles_arns = var.ecs_iam_roles_arns
-
+  termination_wait_time_in_minutes = var.termination_wait_time_in_minutes
 }
 
 module "pre" {
