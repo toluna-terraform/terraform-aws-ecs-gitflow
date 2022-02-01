@@ -35,7 +35,6 @@ data "aws_iam_policy_document" "codebuild_role_policy" {
             "ssm:*",
             "ecs:DescribeTaskDefinition",
             "cloudformation:*",
-            "codebuild:*",
             "s3:*",
             "apigateway:*",
             "lambda:*",
