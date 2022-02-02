@@ -97,3 +97,11 @@ variable "pipeline_type" {
 variable "termination_wait_time_in_minutes" {
   default = 120
 }
+
+variable "test_report_group" {
+  type = string
+}
+
+variable "coverage_report_group" {
+  type = string
+}

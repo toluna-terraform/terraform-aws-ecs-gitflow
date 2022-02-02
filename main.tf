@@ -41,7 +41,10 @@ module "build" {
     ECR_REPO_NAME = var.ecr_repo_name,
     TASK_DEF_NAME = var.task_def_name, 
     ADO_USER = data.aws_ssm_parameter.ado_user.value, 
-    ADO_PASSWORD = data.aws_ssm_parameter.ado_password.value })
+    ADO_PASSWORD = data.aws_ssm_parameter.ado_password.value,
+    TEST_REPORT = var.test_report_group,
+    CODE_COVERAGE_REPORT = var.coverage_report_group
+  })
 }
 
 
