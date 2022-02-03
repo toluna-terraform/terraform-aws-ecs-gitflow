@@ -100,8 +100,7 @@ module "post" {
     ECR_REPO_NAME = var.ecr_repo_name,
     ENV_NAME = var.env_name,
     FROM_ENV = var.from_env,
-    APP_NAME = var.app_name,
-    UPDATE_BITBUCKET = templatefile("${path.module}/templates/update_bitbucket.sh.tpl", { APP_NAME = var.app_name,ENV_NAME = var.env_name, ENV_TYPE = var.env_type })
+    APP_NAME = var.app_name
     })
 
 }
