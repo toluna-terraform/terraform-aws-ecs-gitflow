@@ -4,8 +4,6 @@ env:
   parameter-store:
     USER: "/app/bb_user"  
     PASS: "/app/bb_app_pass"
-    CONSUL_PROJECT_ID: "/infra/${APP_NAME}-${ENV_TYPE}/consul_project_id"
-    CONSUL_HTTP_TOKEN: "/infra/${APP_NAME}-${ENV_TYPE}/consul_http_token"
 
 phases:
   pre_build:
@@ -16,6 +14,7 @@ phases:
       - COMMENT="Pipeline has been done successfully."
       - PR_NUMBER=$(cat pr.txt)
       - SRC_CHANGED=$(cat src_changed.txt)
+      - COMMIT_ID=$(cat commit_id.txt)
   build:
     commands:
       - |
@@ -33,7 +32,6 @@ phases:
   post_build:
     commands:
       - |
-        COMMIT_ID=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/commit_id")
         REPORT_URL="https://console.aws.amazon.com/codesuite/codedeploy/applications/ecs-deploy-${ENV_NAME}/deployment-groups/ecs-deploy-group-${ENV_NAME}"
         URL="https://api.bitbucket.org/2.0/repositories/tolunaengineering/${APP_NAME}/commit/$COMMIT_ID/statuses/build/"
         curl --request POST --url $URL -u "$USER:$PASS" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"    
