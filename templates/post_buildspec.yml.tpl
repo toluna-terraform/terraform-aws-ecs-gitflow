@@ -4,6 +4,7 @@ env:
   parameter-store:
     USER: "/app/bb_user"  
     PASS: "/app/bb_app_pass"
+    RELEASE_HOOK_URL: "/app/jira_release_hook"
 
 phases:
   pre_build:
@@ -35,6 +36,12 @@ phases:
         REPORT_URL="https://console.aws.amazon.com/codesuite/codedeploy/applications/ecs-deploy-${ENV_NAME}/deployment-groups/ecs-deploy-group-${ENV_NAME}"
         URL="https://api.bitbucket.org/2.0/repositories/tolunaengineering/${APP_NAME}/commit/$COMMIT_ID/statuses/build/"
         curl --request POST --url $URL -u "$USER:$PASS" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"    
+      - |
+        if ["${ENV_NAME}" == "prod"]; then 
+          declare -a version=($(aws ecr describe-images --repository-name ${APP_NAME}-main --image-ids imageTag=trn --query "imageDetails[0].imageTags[?Value==trn]" --output text))
+          export RELEASE_VERSION=$${version[1]}
+          curl --request POST --url $RELEASE_HOOK_URL --header "Content-Type:application/json" --data "{\"data\": {\"releaseVersion\":\"$RELEASE_VERSION\"}}"
+        fi
       - |
         CORALOGIX_APIKEY=$(aws ssm get-parameter --name /infra/coralogix-tags/apikey --with-decryption --query 'Parameter.Value' --output text) 
         curl -X POST "https://webapi.coralogix.com/api/v1/external/tags" \
