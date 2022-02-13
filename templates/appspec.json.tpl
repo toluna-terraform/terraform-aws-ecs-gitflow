@@ -20,8 +20,10 @@
             "AfterAllowTestTraffic": "${APP_NAME}-${ENV_TYPE}-test-framework"
         },
         %{ endif }
+        %{ if PIPELINE_TYPE != "dev" }
 		{
             "BeforeAllowTraffic": "${APP_NAME}-${ENV_TYPE}-merge-waiter"
         }
+        %{ endif }
     ]
 }

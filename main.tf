@@ -31,10 +31,12 @@ module "build" {
   s3_bucket                             = local.artifacts_bucket_name
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
-  environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}", HOOKS = var.run_integration_tests})}) //TODO: try to replace with file
+  environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}", HOOKS = var.run_integration_tests, PIPELINE_TYPE = var.pipeline_type})}) //TODO: try to replace with file
   buildspec_file                        = templatefile("buildspec.yml.tpl", 
   { APP_NAME = var.app_name,
     ENV_TYPE = var.env_type,
+    ENV_NAME = var.env_name,
+    PIPELINE_TYPE = var.pipeline_type,
     IMAGE_URI = local.image_uri, 
     DOCKERFILE_PATH = var.dockerfile_path, 
     ECR_REPO_URL = var.ecr_repo_url, 
@@ -72,11 +74,12 @@ module "pre" {
   s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
-  environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}", HOOKS = var.run_integration_tests})})
+  environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}", HOOKS = var.run_integration_tests, PIPELINE_TYPE = var.pipeline_type})})
   buildspec_file                        = templatefile("${path.module}/templates/pre_buildspec.yml.tpl", 
   { ENV_NAME = var.env_name,
     APP_NAME = var.app_name,
     ENV_TYPE = var.env_type,
+    PIPELINE_TYPE = var.pipeline_type,
     FROM_ENV = var.from_env,
     ECR_REPO_URL = var.ecr_repo_url, 
     ECR_REPO_NAME = var.ecr_repo_name,
