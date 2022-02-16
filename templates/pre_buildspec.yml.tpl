@@ -20,8 +20,8 @@ phases:
       - echo $APPSPEC > appspec.json
       - previous_version=$(cut -d ":" -f7 <<< $var)
       - version=$((previous_version+1))
-      - var=$(sed 's/$APP_NAME-$ENV_NAME:$previous_version/$APP_NAME-$ENV_NAME:$version/g' <<< "$var")
-
+      - var=$(sed 's/'$APP_NAME-$ENV_NAME:$previous_version'/'$APP_NAME-$ENV_NAME:$version'/g' <<< "$var")
+      
       - sed -i "s+<TASKDEF_ARN>+$var+g" appspec.json
       - cat appspec.json
       - sed -i "s+<CONTAINER_NAME>+${TASK_DEF_NAME}+g" appspec.json
