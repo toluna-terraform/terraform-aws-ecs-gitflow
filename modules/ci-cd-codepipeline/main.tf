@@ -90,8 +90,10 @@ resource "aws_codepipeline" "codepipeline" {
           ApplicationName = action.value
           DeploymentGroupName = "ecs-deploy-group-${var.env_name}"
           TaskDefinitionTemplateArtifact = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
+          TaskDefinitionTemplatePath = "taskdef.json"
           AppSpecTemplateArtifact = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
-          
+          Image1ArtifactName = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
+          Image1ContainerName = "IMAGE1_NAME"
         }
       }
     }
