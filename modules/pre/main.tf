@@ -76,6 +76,11 @@ resource "aws_iam_role" "codebuild_role" {
   assume_role_policy = data.aws_iam_policy_document.codebuild_assume_role_policy.json
 }
 
+resource "aws_iam_role_policy_attachment" "codebuild_ecs_role" {
+  role = aws_iam_role.codebuild_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonECS_FullAccess" // this policy should be changed to a new policy.
+}
+
 resource "aws_iam_role_policy" "cloudWatch_policy" {
   name = "policy-${local.codebuild_name}"
   role = aws_iam_role.codebuild_role.id

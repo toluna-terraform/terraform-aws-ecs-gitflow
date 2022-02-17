@@ -7,6 +7,7 @@ module "ci-cd-code-pipeline" {
   source                       = "./modules/ci-cd-codepipeline"
   env_name                     = var.env_name
   app_name                     = var.app_name
+  pipeline_type                = var.pipeline_type
   source_repository            = var.source_repository
   s3_bucket                    = local.artifacts_bucket_name
   build_codebuild_projects     = [module.build.attributes.name]

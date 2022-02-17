@@ -29,3 +29,6 @@ variable "s3_bucket" {
 variable "app_name" {
   default = "chorus"
 }
+
+variable "pipeline_type" {
+}

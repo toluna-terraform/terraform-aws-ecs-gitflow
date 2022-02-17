@@ -64,7 +64,7 @@ resource "aws_codepipeline" "codepipeline" {
         provider         = "CodeBuild"
         input_artifacts  = ["ci_output"]
         version          = "1"
-        output_artifacts = ["cd_output"]
+        output_artifacts = var.pipeline_type == "dev" ? ["dev_output"] : ["cd_output"]
 
         configuration = {
           ProjectName = action.value
@@ -84,13 +84,13 @@ resource "aws_codepipeline" "codepipeline" {
         category        = "Deploy"
         owner           = "AWS"
         provider        = "CodeDeployToECS"
-        input_artifacts = ["cd_output"]
+        input_artifacts = var.pipeline_type == "dev" ? ["dev_output"] : ["cd_output"]
         version         = "1"
         configuration = {
           ApplicationName = action.value
           DeploymentGroupName = "ecs-deploy-group-${var.env_name}"
-          TaskDefinitionTemplateArtifact = "cd_output"
-          AppSpecTemplateArtifact = "cd_output"
+          TaskDefinitionTemplateArtifact = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
+          AppSpecTemplateArtifact = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
           
         }
       }
