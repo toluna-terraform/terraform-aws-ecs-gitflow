@@ -9,7 +9,12 @@ phases:
       - BUILD_CONDITION=$(cat ci.txt)
       - PR_NUMBER=$(cat pr.txt)
       - SRC_CHANGED=$(cat src_changed.txt)
-      - export FROM_ENV=$(cat new_version.txt)
+      - |
+        if [ "${PIPELINE_TYPE}" == "cd"];then
+          export FROM_ENV="${FROM_ENV}"
+        else
+          export FROM_ENV=$(cat new_version.txt)
+        fi
   build:
     commands:
       - printf '{"ImageURI":"${ECR_REPO_URL}:%s"}' "$FROM_ENV" > imageDetail.json
