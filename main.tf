@@ -1,5 +1,5 @@
 locals {
-  image_uri = "${var.ecr_repo_url}:latest"
+  image_uri = "${var.ecr_repo_url}:${var.from_env}"
   artifacts_bucket_name = "s3-codepipeline-${var.app_name}-${var.env_type}"
 }
 
