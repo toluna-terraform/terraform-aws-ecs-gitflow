@@ -9,10 +9,10 @@ phases:
       - BUILD_CONDITION=$(cat ci.txt)
       - PR_NUMBER=$(cat pr.txt)
       - SRC_CHANGED=$(cat src_changed.txt)
-      - FROM_ENV=$(cat new_version.txt)
+      - export FROM_ENV=$(cat new_version.txt)
   build:
     commands:
-      - printf '{"ImageURI":"${ECR_REPO_URL}:$FROM_ENV"}' > imageDetail.json
+      - printf '{"ImageURI":"${ECR_REPO_URL}:%s"}' "$FROM_ENV" > imageDetail.json
       - aws ecs describe-task-definition --task-definition ${TASK_DEF_NAME} --query "taskDefinition" --output json > tmp_taskdef.json
       - sed -i -E 's/'${APP_NAME}'-main:.*,/'${APP_NAME}'-main:'$FROM_ENV'",/' tmp_taskdef.json
       - jq 'del(.revision,.taskDefinitionArn,.status,.compatibilities,.requiresAttributes,.registeredAt,.registeredBy) | .containerDefinitions[0].image="<IMAGE1_NAME>"' tmp_taskdef.json > taskdef.json
