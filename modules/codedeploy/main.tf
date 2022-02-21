@@ -58,7 +58,7 @@ resource "aws_codedeploy_deployment_group" "deployment_group" {
 }
 
 resource "aws_iam_role" "codedeploy_role" {
-  name = "role-codedeploy-chorus-${var.env_name}"
+  name = "role-codedeploy-${var.app_name}-${var.env_name}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

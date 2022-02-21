@@ -55,6 +55,7 @@ module "code-deploy" {
   source             = "./modules/codedeploy"
   env_name           = var.env_name
   env_type           = var.env_type
+  app_name           = var.app_name
   s3_bucket          = "s3-codepipeline-${var.app_name}-${var.env_type}"
   ecs_service_name   = var.ecs_service_name
   ecs_cluster_name   = var.ecs_cluster_name
