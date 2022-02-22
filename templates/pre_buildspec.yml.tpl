@@ -10,7 +10,7 @@ phases:
       - PR_NUMBER=$(cat pr.txt)
       - SRC_CHANGED=$(cat src_changed.txt)
       - |
-        if [ "${PIPELINE_TYPE}" == "cd"] || [[ "$SRC_CHANGED" == "false" ] && [ "${PIPELINE_TYPE}" != "cd" ]];then
+        if [ "${PIPELINE_TYPE}" == "cd"] || [[ "$SRC_CHANGED" == "false" && "${PIPELINE_TYPE}" != "cd" ]];then
           export FROM_ENV="${FROM_ENV}"
         else
           export FROM_ENV=$(cat new_version.txt)
