@@ -38,7 +38,7 @@ module "build" {
     ENV_TYPE = var.env_type,
     ENV_NAME = var.env_name,
     PIPELINE_TYPE = var.pipeline_type,
-    IMAGE_URI = var.pipeline_type == "dev" ? var.env_name : local.image_uri, 
+    IMAGE_URI = var.pipeline_type == "dev" ? "${var.ecr_repo_url}:${var.env_name}" : local.image_uri, 
     DOCKERFILE_PATH = var.dockerfile_path, 
     ECR_REPO_URL = var.ecr_repo_url, 
     ECR_REPO_NAME = var.ecr_repo_name,
