@@ -93,7 +93,7 @@ module "pre" {
 
 module "post" {
   source                                = "./modules/post"
-  env_name                              = var.env_name
+  env_name                              = split("-",var.env_name)[0]
   env_type                              = var.env_type
   codebuild_name                        = "post-${var.app_name}"
   source_repository                     = var.source_repository
