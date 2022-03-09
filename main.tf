@@ -93,7 +93,7 @@ module "pre" {
 
 module "post" {
   source                                = "./modules/post"
-  env_name                              = split("-",var.env_name)[0]
+  env_name                              = var.env_name
   env_type                              = var.env_type
   codebuild_name                        = "post-${var.app_name}"
   source_repository                     = var.source_repository
@@ -103,7 +103,7 @@ module "post" {
   buildspec_file                        = templatefile("${path.module}/templates/post_buildspec.yml.tpl", 
   { ECR_REPO_URL = var.ecr_repo_url, 
     ECR_REPO_NAME = var.ecr_repo_name,
-    ENV_NAME = var.env_name,
+    ENV_NAME = split("-",var.env_name)[0],
     FROM_ENV = var.from_env,
     APP_NAME = var.app_name,
     ENV_TYPE = var.env_type
