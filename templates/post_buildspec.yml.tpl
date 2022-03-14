@@ -2,8 +2,8 @@ version: 0.2
 
 env:
   parameter-store:
-    USER: "/app/bb_user"  
-    PASS: "/app/bb_app_pass"
+    BB_USER: "/app/bb_user"  
+    BB_PASS: "/app/bb_app_pass"
     RELEASE_HOOK_URL: "/app/jira_release_hook"
 
 phases:
@@ -16,6 +16,7 @@ phases:
       - PR_NUMBER=$(cat pr.txt)
       - SRC_CHANGED=$(cat src_changed.txt)
       - COMMIT_ID=$(cat commit_id.txt)
+      - export BB_TOKEN=$(echo "$BB_USER:$BB_PASS" | base64)
   build:
     commands:
       - |
@@ -35,7 +36,7 @@ phases:
       - |
         REPORT_URL="https://console.aws.amazon.com/codesuite/codedeploy/applications/ecs-deploy-${ENV_NAME}/deployment-groups/ecs-deploy-group-${ENV_NAME}"
         URL="https://api.bitbucket.org/2.0/repositories/tolunaengineering/${APP_NAME}/commit/$COMMIT_ID/statuses/build/"
-        curl --request POST --url $URL -u "$USER:$PASS" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"    
+        curl --request POST --url $URL --header "Authorization:Basic $BB_TOKEN" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"    
       - |
         if [ "${ENV_NAME}" == "prod" ]; then 
           declare -a version=($(aws ecr describe-images --repository-name ${APP_NAME}-main --image-ids imageTag=trn --query "imageDetails[0].imageTags[?Value==trn]" --output text))
