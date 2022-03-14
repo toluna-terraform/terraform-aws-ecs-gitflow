@@ -38,7 +38,7 @@ phases:
         curl --request POST --url $URL -u "$USER:$PASS" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"    
       - |
         if [ "${ENV_NAME}" == "prod" ]; then 
-          declare -a version=($(aws ecr describe-images --repository-name ${APP_NAME}-main --image-ids imageTag=trn --query "imageDetails[0].imageTags[?Value==trn]" --output text))
+          declare -a version=($(aws ecr describe-images --repository-name ${APP_NAME}-main --image-ids imageTag=${FROM_ENV} --query "imageDetails[0].imageTags[?Value==${FROM_ENV}]" --output text))
           export RELEASE_VERSION=$${version[1]}
           curl --request POST --url $RELEASE_HOOK_URL --header "Content-Type:application/json" --data "{\"data\": {\"releaseVersion\":\"$RELEASE_VERSION\"}}"
         fi
