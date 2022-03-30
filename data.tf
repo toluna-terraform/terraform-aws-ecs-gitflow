@@ -1,11 +1,30 @@
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
-data "aws_ssm_parameter" "ado_password" {
-  name = "/app/ado_password"
+data "aws_iam_policy_document" "codebuild_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["codebuild.amazonaws.com"]
+        }
+    }
 }
 
-data "aws_ssm_parameter" "ado_user" {
-  name = "/app/ado_user"
+data "aws_iam_policy_document" "codebuild_role_policy" {
+  statement {
+    actions   = [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+            "ssm:*",
+            "cloudformation:*",
+            "s3:*",
+            "apigateway:*",
+            "lambda:*",
+            "codebuild:*"
+        ]
+    resources = ["*"]
+  }
+}
+
+data "aws_ssm_parameter" "github_token" {
+  name = "/app/github_token"
 }
