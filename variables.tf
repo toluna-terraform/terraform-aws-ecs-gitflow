@@ -105,3 +105,8 @@ variable "test_report_group" {
 variable "coverage_report_group" {
   type = string
 }
+
+variable "enable_jira_automation" {
+    type = bool
+    default = false
+}
