@@ -52,6 +52,7 @@ variable "privileged_mode" {
 }
 
 variable "enable_jira_automation" {
-    type = string
+    type = bool
+    description = "flag to indicate if Jira automation is enabled"
     default = false
 }
