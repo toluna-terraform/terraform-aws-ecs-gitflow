@@ -101,7 +101,7 @@ module "post" {
   s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
-  enable_jira_automation                = data.aws_ssm_parameter.enable_jira_automation.value 
+  enable_jira_automation                = var.enable_jira_automation
 
   buildspec_file                        = templatefile("${path.module}/templates/post_buildspec.yml.tpl", 
   { ECR_REPO_URL = var.ecr_repo_url, 
@@ -110,7 +110,7 @@ module "post" {
     FROM_ENV = var.from_env,
     APP_NAME = var.app_name,
     ENV_TYPE = var.env_type,
-    ENABLE_JIRA_AUTOMATION = data.aws_ssm_parameter.enable_jira_automation.value 
+    ENABLE_JIRA_AUTOMATION = var.enable_jira_automation
     })
 
 }

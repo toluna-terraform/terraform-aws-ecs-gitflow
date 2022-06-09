@@ -9,7 +9,3 @@ data "aws_ssm_parameter" "ado_password" {
 data "aws_ssm_parameter" "ado_user" {
   name = "/app/ado_user"
 }
-
-data "aws_ssm_parameter" "enable_jira_automation" {
-  name = "/app/enable_jira_automation"
-}
