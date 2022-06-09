@@ -14,6 +14,7 @@ module "ci-cd-code-pipeline" {
   post_codebuild_projects      = [module.post.attributes.name]
   pre_codebuild_projects       = [module.pre.attributes.name]
   code_deploy_applications     = [module.code-deploy.attributes.name]
+
   depends_on = [
     module.build,
     module.code-deploy,
@@ -100,13 +101,16 @@ module "post" {
   s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
+  enable_jira_automation                = var.enable_jira_automation
+
   buildspec_file                        = templatefile("${path.module}/templates/post_buildspec.yml.tpl", 
   { ECR_REPO_URL = var.ecr_repo_url, 
     ECR_REPO_NAME = var.ecr_repo_name,
     ENV_NAME = split("-",var.env_name)[0],
     FROM_ENV = var.from_env,
     APP_NAME = var.app_name,
-    ENV_TYPE = var.env_type
+    ENV_TYPE = var.env_type,
+    ENABLE_JIRA_AUTOMATION = var.enable_jira_automation
     })
 
 }
