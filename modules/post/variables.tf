@@ -50,3 +50,9 @@ variable "privileged_mode" {
     default     = true
     description = "set to true if building a docker"
 }
+
+variable "enable_jira_automation" {
+    type = bool
+    description = "flag to indicate if Jira automation is enabled"
+    default = false
+}
