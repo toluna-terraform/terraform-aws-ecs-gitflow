@@ -7,7 +7,7 @@ metadata:
     - title: Website
       url: https://backstage-dev.toluna-internal.com/
     - title: Documentation
-      url: https://backstage-dev.toluna-internal.com/docs
+      url: https://github.com/toluna-terraform/terraform-aws-ecs-gitflow/blob/master/README.md
   annotations:
     github.com/project-slug: toluna-terraform/terraform-aws-ecs-gitflow
     backstage.io/techdocs-ref: dir:.
