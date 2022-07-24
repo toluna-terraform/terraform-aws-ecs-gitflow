@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: terraform-aws-ecs-gitflow
+  description: Terraform ECS GitFlow module - Backstage POC
+  links:
+    - title: Website
+      url: https://backstage-dev.toluna-internal.com/
+    - title: Documentation
+      url: https://backstage-dev.toluna-internal.com/docs
+  annotations:
+    github.com/project-slug: toluna-terraform/terraform-aws-ecs-gitflow
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: library
+  lifecycle: production
+  owner: Platform   
