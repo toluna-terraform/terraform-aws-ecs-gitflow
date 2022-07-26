@@ -51,21 +51,21 @@ variable "ecs_service_name" {
      type = string
  }
 
-variable "alb_listener_arn" {
-     type = string
- }
+# variable "alb_listener_arn" {
+#      type = string
+#  }
 
-variable "alb_test_listener_arn" {
-     type = string
- }
+# variable "alb_test_listener_arn" {
+#      type = string
+#  }
  
-variable "alb_tg_blue_name" {
-     type = string
- }
+# variable "alb_tg_blue_name" {
+#      type = string
+#  }
 
-variable "alb_tg_green_name" {
-     type = string
- }
+# variable "alb_tg_green_name" {
+#      type = string
+#  }
 
 variable "ecs_iam_roles_arns" {
      type = list(string)
@@ -98,16 +98,21 @@ variable "termination_wait_time_in_minutes" {
   default = 120
 }
 
-variable "test_report_group" {
-  type = string
-}
+# variable "test_report_group" {
+#   type = string
+# }
 
-variable "coverage_report_group" {
-  type = string
-}
+# variable "coverage_report_group" {
+#   type = string
+# }
 
 variable "enable_jira_automation" {
   type = bool
   description = "flag to indicate if Jira automation is enabled"
   default = false
+}
+
+variable "appmesh_pipeline" {
+    type = bool
+    default = false
 }

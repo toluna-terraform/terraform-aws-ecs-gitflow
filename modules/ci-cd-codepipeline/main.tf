@@ -53,72 +53,72 @@ resource "aws_codepipeline" "codepipeline" {
   }
 
 
-    stage {
-    name = "Pre-Deploy"
-    dynamic "action" {
-      for_each = var.pre_codebuild_projects
-      content {
-        name             = action.value
-        category         = "Build"
-        owner            = "AWS"
-        provider         = "CodeBuild"
-        input_artifacts  = ["ci_output"]
-        version          = "1"
-        output_artifacts = var.pipeline_type == "dev" ? ["dev_output"] : ["cd_output"]
+  #   stage {
+  #   name = "Pre-Deploy"
+  #   dynamic "action" {
+  #     for_each = var.pre_codebuild_projects
+  #     content {
+  #       name             = action.value
+  #       category         = "Build"
+  #       owner            = "AWS"
+  #       provider         = "CodeBuild"
+  #       input_artifacts  = ["ci_output"]
+  #       version          = "1"
+  #       output_artifacts = var.pipeline_type == "dev" ? ["dev_output"] : ["cd_output"]
 
-        configuration = {
-          ProjectName = action.value
-        }
+  #       configuration = {
+  #         ProjectName = action.value
+  #       }
 
-      }
+  #     }
 
-    }
-  }
+  #   }
+  # }
 
-  stage {
-    name = "Deploy"
-    dynamic "action" {
-      for_each = var.code_deploy_applications
-      content {
-        name            = action.value
-        category        = "Deploy"
-        owner           = "AWS"
-        provider        = "CodeDeployToECS"
-        input_artifacts = var.pipeline_type == "dev" ? ["dev_output"] : ["cd_output"]
-        version         = "1"
-        configuration = {
-          ApplicationName = action.value
-          DeploymentGroupName = "ecs-deploy-group-${var.env_name}"
-          TaskDefinitionTemplateArtifact = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
-          TaskDefinitionTemplatePath = "taskdef.json"
-          AppSpecTemplateArtifact = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
-          Image1ArtifactName = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
-          Image1ContainerName = "IMAGE1_NAME"
-        }
-      }
-    }
-  }
+  # stage {
+  #   name = "Deploy"
+  #   dynamic "action" {
+  #     for_each = var.code_deploy_applications
+  #     content {
+  #       name            = action.value
+  #       category        = "Deploy"
+  #       owner           = "AWS"
+  #       provider        = "CodeDeployToECS"
+  #       input_artifacts = var.pipeline_type == "dev" ? ["dev_output"] : ["cd_output"]
+  #       version         = "1"
+  #       configuration = {
+  #         ApplicationName = action.value
+  #         DeploymentGroupName = "ecs-deploy-group-${var.env_name}"
+  #         TaskDefinitionTemplateArtifact = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
+  #         TaskDefinitionTemplatePath = "taskdef.json"
+  #         AppSpecTemplateArtifact = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
+  #         Image1ArtifactName = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
+  #         Image1ContainerName = "IMAGE1_NAME"
+  #       }
+  #     }
+  #   }
+  # }
 
-    stage {
-    name = "Post-Deploy"
-    dynamic "action" {
-      for_each = var.post_codebuild_projects
-      content {
-        name             = action.value
-        category         = "Build"
-        owner            = "AWS"
-        provider         = "CodeBuild"
-        input_artifacts  = ["source_output"]
-        version          = "1"
+  #   stage {
+  #   name = "Post-Deploy"
+  #   dynamic "action" {
+  #     for_each = var.post_codebuild_projects
+  #     content {
+  #       name             = action.value
+  #       category         = "Build"
+  #       owner            = "AWS"
+  #       provider         = "CodeBuild"
+  #       input_artifacts  = ["source_output"]
+  #       version          = "1"
 
-        configuration = {
-          ProjectName = action.value
-        }
+  #       configuration = {
+  #         ProjectName = action.value
+  #       }
 
-      }
+  #     }
 
-    }
-  }
+  #   }
+  # }
 
 }
 
