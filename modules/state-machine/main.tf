@@ -1,53 +1,3 @@
-resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_lambda_function" "test1_lambda" {
-
-  runtime = "python3.9"
-
-  s3_bucket     = data.aws_s3_object.s3_file1.bucket
-  s3_key        = data.aws_s3_object.s3_file1.key
-
-  function_name = "test1_function"
-  role          = aws_iam_role.iam_for_lambda.arn
-  # value should be file-name.handler-name
-  handler       = "test1_function.lambda_handler"
-
-
-}
-
-resource "aws_lambda_function" "test2_lambda" {
-
-  runtime = "python3.9"
-
-  s3_bucket     = data.aws_s3_object.s3_file2.bucket
-  s3_key        = data.aws_s3_object.s3_file2.key
-
-  function_name = "test2_function"
-  role          = aws_iam_role.iam_for_lambda.arn
-  # value should be file-name.handler-name
-  handler       = "test2_function.lambda_handler"
-
-
-}
-
 resource "aws_iam_role" "iam_for_sfn" {
   name = "iam_for_sfn"
   managed_policy_arns = [ "arn:aws:iam::aws:policy/service-role/AWSLambdaRole" ]
@@ -70,27 +20,80 @@ EOF
 }
 
 resource "aws_sfn_state_machine" "sfn_state_machine" {
-  name     = "my-state-machine"
+  name     = "${var.app_name}-${var.env_name}-state-machine"
   role_arn = aws_iam_role.iam_for_sfn.arn
 
   definition = <<EOF
 {
-  "Comment": "A Hello World example of AWS Step functions using an AWS Lambda Function",
-  "StartAt": "Task1",
+  "Comment": "ECS gitflow with appmesh using an AWS Lambda Function",
+  "StartAt": "deploy_updated_version",
   "States": {
-    "Task1": {
+    "deploy_updated_version": {
       "Type": "Task",
-      "Resource": "${aws_lambda_function.test1_lambda.arn}",
-      "Next": "Task2"
+      "Resource": "${aws_lambda_function.deploy_updated_version.arn}",
+      "InputPath": "$.input",
+      "OutputPath": "$.output",
+      "ResultPath": "$.results",
+      "Next": "health_check"
     },
-    "Task2": {
+    "health_check": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.health_state",
+          "StringEquals": "healthy",
+          "Next": "run_integration_tests"
+        },
+        {  
+          "Variable": "$.health_state",
+          "StringEquals": "unhealthy",
+          "Next": "rollback"
+        }
+      ]
+    },
+    "rollback": {
       "Type": "Task",
-      "Resource": "${aws_lambda_function.test2_lambda.arn}",
+      "Resource": "${aws_lambda_function.rollback.arn}",
+      "End": true
+    },
+    "run_integration_tests": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.run_integration_tests.arn}",
+      "InputPath": "$",
+      "OutputPath": "$",
+      "ResultPath": "$",
+      "Next": "validate_integ_test_results"
+    },
+    "validate_integ_test_results": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.health_state",
+          "StringEquals": "healthy",
+          "Next": "wait_for_merge"
+        },
+        {  
+          "Variable": "$.health_state",
+          "StringEquals": "unhealthy",
+          "Next": "rollback"
+        }
+      ],
+      "Default": "wait_for_merge"
+    },
+    "wait_for_merge": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.wait_for_merge.arn}",
+      "Next": "shift_traffic"
+    },
+    "shift_traffic": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.shift_traffic.arn}",
       "End": true
     }
   }
 }
 EOF
 }
+
 
 
