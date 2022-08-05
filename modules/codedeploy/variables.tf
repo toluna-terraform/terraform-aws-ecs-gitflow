@@ -50,3 +50,11 @@ variable appmesh_pipeline {
   type = bool 
   default = false
 }
+
+variable task_def_name {
+  type = string
+}
+
+variable current_color {
+  type = string
+}

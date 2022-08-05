@@ -1,6 +1,9 @@
 locals {
   image_uri = "${var.ecr_repo_url}:${var.from_env}"
   artifacts_bucket_name = "s3-codepipeline-${var.app_name}-${var.env_type}"
+
+  current_color = data.consul_keys.current_color.var.current_color
+  task_def_name = "${var.app_name}-${var.env_name}-${local.current_color}"
 }
 
 module "ci-cd-code-pipeline" {
@@ -10,13 +13,19 @@ module "ci-cd-code-pipeline" {
   pipeline_type                = var.pipeline_type
   source_repository            = var.source_repository
   s3_bucket                    = local.artifacts_bucket_name
+
   build_codebuild_projects     = [module.build.attributes.name]
-  # post_codebuild_projects      = [module.post.attributes.name]
-  # pre_codebuild_projects       = [module.pre.attributes.name]
+  pre_codebuild_projects       = [module.pre.attributes.name]
   # code_deploy_applications     = [module.code-deploy.attributes.name]
+  code_deploy_applications     = [ "${var.app_name}" ]
+  # post_codebuild_projects      = [module.post.attributes.name]
+
+  # state_machine_arn            = module.state-machine.arn
 
   depends_on = [
     module.build,
+    module.pre,
+    # module.code-deploy,
     module.state-machine
   ]
 }
@@ -41,7 +50,7 @@ module "build" {
     DOCKERFILE_PATH = var.dockerfile_path, 
     ECR_REPO_URL = var.ecr_repo_url, 
     ECR_REPO_NAME = var.ecr_repo_name,
-    TASK_DEF_NAME = var.task_def_name, 
+    TASK_DEF_NAME = local.task_def_name, 
     ADO_USER = data.aws_ssm_parameter.ado_user.value, 
     ADO_PASSWORD = data.aws_ssm_parameter.ado_password.value,
 
@@ -51,6 +60,29 @@ module "build" {
 }
 
 
+module "pre" {
+  source                                = "./modules/pre"
+  env_name                              = var.env_name
+  env_type                              = var.env_type
+  codebuild_name                        = "pre-${var.app_name}"
+  source_repository                     = var.source_repository
+  s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
+  privileged_mode                       = true
+  environment_variables_parameter_store = var.environment_variables_parameter_store
+  environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}", HOOKS = var.run_integration_tests, PIPELINE_TYPE = var.pipeline_type})})
+
+  buildspec_file                        = templatefile("${path.module}/templates/pre_buildspec.yml.tpl", 
+  { ENV_NAME = var.env_name,
+    APP_NAME = var.app_name,
+    ENV_TYPE = var.env_type,
+    PIPELINE_TYPE = var.pipeline_type,
+    FROM_ENV = var.from_env,
+    ECR_REPO_URL = var.ecr_repo_url, 
+    ECR_REPO_NAME = var.ecr_repo_name,
+    TASK_DEF_NAME = local.task_def_name 
+    })
+}
+
 # module "code-deploy" {
 #   source             = "./modules/codedeploy"
 #   env_name           = var.env_name
@@ -59,6 +91,8 @@ module "build" {
 #   s3_bucket          = "s3-codepipeline-${var.app_name}-${var.env_type}"
 #   ecs_service_name   = var.ecs_service_name
 #   ecs_cluster_name   = var.ecs_cluster_name
+#   task_def_name      = var.task_def_name
+#   current_color      = data.consul_keys.current_color.var.current_color
   
 #   appmesh_pipeline   = var.appmesh_pipeline
 #   # alb_listener_arn   = var.alb_listener_arn
@@ -75,28 +109,6 @@ module "state-machine" {
   env_type           = var.env_type
   app_name           = var.app_name
 }
-
-# module "pre" {
-#   source                                = "./modules/pre"
-#   env_name                              = var.env_name
-#   env_type                              = var.env_type
-#   codebuild_name                        = "pre-${var.app_name}"
-#   source_repository                     = var.source_repository
-#   s3_bucket                             = "s3-codepipeline-${var.app_name}-${var.env_type}"
-#   privileged_mode                       = true
-#   environment_variables_parameter_store = var.environment_variables_parameter_store
-#   environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}", HOOKS = var.run_integration_tests, PIPELINE_TYPE = var.pipeline_type})})
-#   buildspec_file                        = templatefile("${path.module}/templates/pre_buildspec.yml.tpl", 
-#   { ENV_NAME = var.env_name,
-#     APP_NAME = var.app_name,
-#     ENV_TYPE = var.env_type,
-#     PIPELINE_TYPE = var.pipeline_type,
-#     FROM_ENV = var.from_env,
-#     ECR_REPO_URL = var.ecr_repo_url, 
-#     ECR_REPO_NAME = var.ecr_repo_name,
-#     TASK_DEF_NAME = var.task_def_name 
-#     })
-# }
 
 
 
