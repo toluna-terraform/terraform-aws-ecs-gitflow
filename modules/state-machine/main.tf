@@ -10,30 +10,7 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
     "deploy_updated_version": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.deploy_updated_version.arn}",
-      "InputPath": "$.input",
-      "OutputPath": "$.output",
-      "ResultPath": "$.results",
-      "Next": "health_check"
-    },
-    "health_check": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Variable": "$.health_state",
-          "StringEquals": "healthy",
-          "Next": "run_integration_tests"
-        },
-        {  
-          "Variable": "$.health_state",
-          "StringEquals": "unhealthy",
-          "Next": "rollback"
-        }
-      ]
-    },
-    "rollback": {
-      "Type": "Task",
-      "Resource": "${aws_lambda_function.rollback.arn}",
-      "End": true
+      "Next": "run_integration_tests"
     },
     "run_integration_tests": {
       "Type": "Task",
@@ -58,6 +35,11 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
         }
       ],
       "Default": "wait_for_merge"
+    },
+    "rollback": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.rollback.arn}",
+      "End": true
     },
     "wait_for_merge": {
       "Type": "Task",

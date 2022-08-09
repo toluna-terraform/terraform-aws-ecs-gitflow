@@ -52,3 +52,10 @@ resource "aws_iam_policy_attachment" "attach-ecs-policy" {
   roles      = [ aws_iam_role.iam_for_lambda.name ]
   policy_arn = "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
 }
+
+# Attach SSM access
+resource "aws_iam_policy_attachment" "attach-ssm-policy" {
+  name       = "attach-ssm-policy"
+  roles      = [ aws_iam_role.iam_for_lambda.name ]
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+}

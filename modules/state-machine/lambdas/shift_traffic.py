@@ -3,6 +3,22 @@ import json
 
 def lambda_handler(event, context):
 
+  envName = "chef-srinivas"
+  appName = "chef"
+  cluster_name = "chef-srinivas"
+
+  # getting current_color
+  ssm_client = boto3.client("ssm", region_name="us-east-1")
+  ssm_resonse = ssm_client.get_parameter    (
+    Name = '/infra/{env}/current_color'.format(env = envName)
+  )
+  currentColor = ssm_resonse["Parameter"]["Value"]
+  
+  if currentColor == "green":
+    nextColor = "blue"
+  else:
+    nextColor = "green"
+
   # --- switch traffic at appmesh route
   client = boto3.client("appmesh", region_name="us-east-1")
   response = client.update_route (
@@ -25,10 +41,7 @@ def lambda_handler(event, context):
               ]
           },
           'match': {
-              'method': 'POST',
-              'path': {
-                  'exact': '/'
-              }
+              'prefix': '/'
           }
       }
    }
@@ -37,16 +50,6 @@ def lambda_handler(event, context):
   # --- shutdown current previous color tasks after traffic switch
   client = boto3.client("ecs", region_name="us-east-1")
   
-  envName = "chef-srinivas"
-  currentColor = "green"
-  appName = "chef"
-  if currentColor == "green":
-    nextColor = "blue"
-  else:
-    nextColor = "green"
-
-  clusters = client.list_clusters()
-  cluster_name = clusters['clusterArns'][3]
   print ("cluster_name = " + cluster_name)
 
   # shutdown curent_color tasks
@@ -56,3 +59,10 @@ def lambda_handler(event, context):
     desiredCount = 0
   )
   print( json.dumps(response, indent=4, default=str))
+
+  # update current_color 
+  ssm_resonse = ssm_client.put_parameter(
+    Name = '/infra/{env}/current_color'.format(env = envName),
+    Value = nextColor,
+    Overwrite = True
+  )
