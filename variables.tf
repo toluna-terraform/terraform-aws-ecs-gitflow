@@ -19,6 +19,11 @@ variable "run_integration_tests" {
     default = false
 }
 
+variable "run_stress_tests" {
+    type = bool
+    default = false
+}
+
 variable "ecr_repo_url" {
     type = string 
 }

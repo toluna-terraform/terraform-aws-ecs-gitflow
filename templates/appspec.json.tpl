@@ -17,7 +17,7 @@
     "Hooks": [
         %{ if HOOKS }
         {
-            "AfterAllowTestTraffic": "${APP_NAME}-${ENV_TYPE}-test-framework"
+            "AfterAllowTestTraffic": "${APP_NAME}-${ENV_TYPE}-test-framework-manager"
         },
         %{ endif }
         %{ if PIPELINE_TYPE != "dev" }
