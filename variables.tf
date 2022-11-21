@@ -116,3 +116,13 @@ variable "enable_jira_automation" {
   description = "flag to indicate if Jira automation is enabled"
   default = false
 }
+
+ variable "sq_enabled" {
+   type = bool
+   default = false
+ }
+
+  variable "sq_version" {
+   type = string
+   default = "4.7.0.2747"
+ }
