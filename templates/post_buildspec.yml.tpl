@@ -43,9 +43,12 @@ phases:
           curl --request POST --url $RELEASE_HOOK_URL --header "Content-Type:application/json" --data "{\"data\": {\"releaseVersion\":\"$RELEASE_VERSION\"}}" || echo "No Jira to change"
         fi
       - |
-        CORALOGIX_APIKEY=$(aws ssm get-parameter --name /infra/coralogix-tags/apikey --with-decryption --query 'Parameter.Value' --output text) 
-        curl -X POST "https://webapi.coralogix.com/api/v1/external/tags" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $CORALOGIX_APIKEY" \
-        -H "maskValue: false" \
-        -d "{\"timestamp\":\""$(date +%s%N | cut -b1-13)"\",\"name\":\"${APP_NAME}-${ENV_NAME}-"$(date '+%Y-%m-%d')"\",\"application\":[\"${ENV_NAME}\"],\"subsystem\":[\"${APP_NAME}\"]}"
+        DATADOG_LAMBDA_FUNCTION_ARN=$(aws lambda get-function --function-name "datadog-forwarder" --query 'Configuration.FunctionArn'  --output text)
+        if [ "$DATADOG_LAMBDA_FUNCTION_ARN" ]; then
+          echo "Datadog forwarder exist\nSubscribing log group "${APP_NAME}-${ENV_NAME}" to "$DATADOG_LAMBDA_FUNCTION_ARN""
+          aws logs put-subscription-filter \
+                  --destination-arn "$DATADOG_LAMBDA_FUNCTION_ARN" \
+                  --log-group-name "${APP_NAME}-${ENV_NAME}" \
+                  --filter-name "${APP_NAME}-${ENV_NAME}" \
+                  --filter-pattern ""
+        fi
