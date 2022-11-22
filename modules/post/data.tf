@@ -28,6 +28,7 @@ data "aws_iam_policy_document" "codebuild_role_policy" {
   }
   statement {
     actions   = [
+            "logs:PutSubscriptionFilter",
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:PutLogEvents",
