@@ -5,11 +5,16 @@ env:
     BB_USER: "/app/bb_user"  
     BB_PASS: "/app/bb_app_pass"
     RELEASE_HOOK_URL: "/app/jira_release_hook"
-
+    CONSUL_PROJECT_ID: "/infra/${APP_NAME}-${ENV_NAME}/consul_project_id"
+    CONSUL_HTTP_TOKEN: "/infra/${APP_NAME}-${ENV_NAME}/consul_http_token"
 
 phases:
   pre_build:
     commands:
+      - yum install -y yum-utils
+      - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+      - yum -y install consul
+      - export CONSUL_HTTP_ADDR=https://consul-cluster-test.consul.$CONSUL_PROJECT_ID.aws.hashicorp.cloud
       - ECR_LOGIN=$(aws ecr get-login-password)
       - docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
       - CODEBUILD_RESOLVED_SOURCE_VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
@@ -44,8 +49,8 @@ phases:
           curl --request POST --url $RELEASE_HOOK_URL --header "Content-Type:application/json" --data "{\"data\": {\"releaseVersion\":\"$RELEASE_VERSION\"}}" || echo "No Jira to change"
         fi
       - |
-        CURRENT_COLOR=$(consul kv get "infra/${app_name}-${env_name}/current_color")
-        IS_MANAGED=$(consul kv get "terraform/${app_name}/app-env.json" | grep "is_managed_env" | sed -e 's/.*\:\(.*\)\,.*/\1/')
+        CURRENT_COLOR=$(consul kv get "infra/{APP_NAME}-${ENV_NAME}/current_color")
+        IS_MANAGED=$(consul kv get "terraform/{APP_NAME}/app-env.json" | grep "is_managed_env" | sed -e 's/.*\:\(.*\)\,.*/\1/')
         DATADOG_LAMBDA_FUNCTION_ARN=$(aws lambda get-function --function-name "datadog-forwarder" --query 'Configuration.FunctionArn'  --output text)
         if [ "$DATADOG_LAMBDA_FUNCTION_ARN" ]; then
                 echo "Datadog forwarder found $DATADOG_LAMBDA_FUNCTION_ARN"
