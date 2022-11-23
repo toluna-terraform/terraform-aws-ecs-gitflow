@@ -49,25 +49,7 @@ phases:
           curl --request POST --url $RELEASE_HOOK_URL --header "Content-Type:application/json" --data "{\"data\": {\"releaseVersion\":\"$RELEASE_VERSION\"}}" || echo "No Jira to change"
         fi
       - |
-        CURRENT_COLOR=$(consul kv get "infra/${app_name}-${env_name}/current_color")
-        DATADOG_LAMBDA_FUNCTION_ARN=$(aws lambda get-function --function-name "datadog-forwarder" --query 'Configuration.FunctionArn'  --output text)
-        if [ "$DATADOG_LAMBDA_FUNCTION_ARN" ]; then
-                echo "Datadog forwarder found $DATADOG_LAMBDA_FUNCTION_ARN"
-                if [ $CURRENT_COLOR ]; then
-                        aws logs put-subscription-filter \
-                                --destination-arn "$DATADOG_LAMBDA_FUNCTION_ARN" \
-                                --log-group-name "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" \
-                                --filter-name "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" \
-                                --filter-pattern ""
-                        echo "Blue/Green infrastructure"
-                        echo "Subscribing log group "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" to "$DATADOG_LAMBDA_FUNCTION_ARN""
-                else
-                        aws logs put-subscription-filter \
-                                --destination-arn "$DATADOG_LAMBDA_FUNCTION_ARN" \
-                                --log-group-name "${APP_NAME}-${ENV_NAME}" \
-                                --filter-name "${APP_NAME}-${ENV_NAME}" \
-                                --filter-pattern ""
-                        echo "Development infrastructure"
-                        echo "Subscribing log group "${APP_NAME}-${ENV_NAME}" to "$DATADOG_LAMBDA_FUNCTION_ARN""
-                fi
-        fi
+        echo ${ENV_NAME}
+        echo ${FROM_ENV}
+        echo ${APP_NAME}
+        echo ${ENV_TYPE}
