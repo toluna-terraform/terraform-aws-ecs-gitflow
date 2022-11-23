@@ -25,7 +25,7 @@ phases:
       - jq 'del(.revision,.taskDefinitionArn,.status,.compatibilities,.requiresAttributes,.registeredAt,.registeredBy) | .containerDefinitions[0].image="<IMAGE1_NAME>"' tmp_taskdef_temp_with_version.json > taskdef.json
       - echo $APPSPEC > appspec.json
       - cat appspec.json
-      - sed -i -E 's/<CONTAINER_PORT>/$CONTAINER_PORT/' appspec.json
+      - sed -i -E 's/<CONTAINER_PORT>/'$CONTAINER_PORT'/' appspec.json
       - sed -i -E 's/<CONTAINER_NAME>/${TASK_DEF_NAME}/' appspec.json
 
 artifacts:
