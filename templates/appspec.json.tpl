@@ -8,7 +8,7 @@
                     "TaskDefinition": "<TASK_DEFINITION>",
                     "LoadBalancerInfo": {
                         "ContainerName": "<CONTAINER_NAME>",
-                        "ContainerPort": 80
+                        "ContainerPort": <CONTAINER_PORT>
                     }
                 }               
             }
