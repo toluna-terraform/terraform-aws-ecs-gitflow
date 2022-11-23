@@ -50,7 +50,7 @@ phases:
         fi
       - |
         CURRENT_COLOR=$(consul kv get "infra/{APP_NAME}-${ENV_NAME}/current_color")
-        IS_MANAGED=$(consul kv get "terraform/{APP_NAME}/app-env.json" | grep "is_managed_env" | sed -e 's/.*\:\(.*\)\,.*/\1/')
+        IS_MANAGED_ENV=$(consul kv get "terraform/{APP_NAME}/app-env.json" | grep "is_managed_env" | sed -e 's/.*\:\(.*\)\,.*/\1/')
         DATADOG_LAMBDA_FUNCTION_ARN=$(aws lambda get-function --function-name "datadog-forwarder" --query 'Configuration.FunctionArn'  --output text)
         if [ "$DATADOG_LAMBDA_FUNCTION_ARN" ]; then
                 echo "Datadog forwarder found $DATADOG_LAMBDA_FUNCTION_ARN"
