@@ -5,10 +5,16 @@ env:
     BB_USER: "/app/bb_user"  
     BB_PASS: "/app/bb_app_pass"
     RELEASE_HOOK_URL: "/app/jira_release_hook"
+    CONSUL_PROJECT_ID: "/infra/${app_name}-${env_type}/consul_project_id"
+    CONSUL_HTTP_TOKEN: "/infra/${app_name}-${env_type}/consul_http_token"
 
 phases:
   pre_build:
     commands:
+      - yum install -y yum-utils
+      - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+      - yum -y install consul
+      - export CONSUL_HTTP_ADDR=https://consul-cluster-test.consul.$CONSUL_PROJECT_ID.aws.hashicorp.cloud
       - ECR_LOGIN=$(aws ecr get-login-password)
       - docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
       - CODEBUILD_RESOLVED_SOURCE_VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
@@ -43,12 +49,25 @@ phases:
           curl --request POST --url $RELEASE_HOOK_URL --header "Content-Type:application/json" --data "{\"data\": {\"releaseVersion\":\"$RELEASE_VERSION\"}}" || echo "No Jira to change"
         fi
       - |
+        CURRENT_COLOR=$(consul kv get "infra/${app_name}-${env_name}/current_color")
         DATADOG_LAMBDA_FUNCTION_ARN=$(aws lambda get-function --function-name "datadog-forwarder" --query 'Configuration.FunctionArn'  --output text)
         if [ "$DATADOG_LAMBDA_FUNCTION_ARN" ]; then
-          echo "Datadog forwarder exist\nSubscribing log group "${APP_NAME}-${ENV_NAME}" to "$DATADOG_LAMBDA_FUNCTION_ARN""
-          aws logs put-subscription-filter \
-                  --destination-arn "$DATADOG_LAMBDA_FUNCTION_ARN" \
-                  --log-group-name "${APP_NAME}-${ENV_NAME}" \
-                  --filter-name "${APP_NAME}-${ENV_NAME}" \
-                  --filter-pattern ""
+                echo "Datadog forwarder found $DATADOG_LAMBDA_FUNCTION_ARN"
+                if [ $CURRENT_COLOR ]; then
+                        aws logs put-subscription-filter \
+                                --destination-arn "$DATADOG_LAMBDA_FUNCTION_ARN" \
+                                --log-group-name "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" \
+                                --filter-name "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" \
+                                --filter-pattern ""
+                        echo "Blue/Green infrastructure"
+                        echo "Subscribing log group "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" to "$DATADOG_LAMBDA_FUNCTION_ARN""
+                else
+                        aws logs put-subscription-filter \
+                                --destination-arn "$DATADOG_LAMBDA_FUNCTION_ARN" \
+                                --log-group-name "${APP_NAME}-${ENV_NAME}" \
+                                --filter-name "${APP_NAME}-${ENV_NAME}" \
+                                --filter-pattern ""
+                        echo "Development infrastructure"
+                        echo "Subscribing log group "${APP_NAME}-${ENV_NAME}" to "$DATADOG_LAMBDA_FUNCTION_ARN""
+                fi
         fi
