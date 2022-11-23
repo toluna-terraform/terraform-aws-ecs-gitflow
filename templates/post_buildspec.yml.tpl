@@ -5,8 +5,8 @@ env:
     BB_USER: "/app/bb_user"  
     BB_PASS: "/app/bb_app_pass"
     RELEASE_HOOK_URL: "/app/jira_release_hook"
-    CONSUL_PROJECT_ID: "/infra/${APP_NAME}-${ENV_NAME}/consul_project_id"
-    CONSUL_HTTP_TOKEN: "/infra/${APP_NAME}-${ENV_NAME}/consul_http_token"
+    CONSUL_PROJECT_ID: "/infra/${APP_NAME}-${ENV_TYPE}/consul_project_id"
+    CONSUL_HTTP_TOKEN: "/infra/${APP_NAME}-${ENV_TYPE}/consul_http_token"
 
 phases:
   pre_build:
