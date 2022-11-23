@@ -43,13 +43,12 @@ phases:
         URL="https://api.bitbucket.org/2.0/repositories/tolunaengineering/${APP_NAME}/commit/$COMMIT_ID/statuses/build/"
         curl --request POST --url $URL -u "$BB_USER:$BB_PASS" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"    
       - |
+        echo ${ENV_NAME}
+        echo ${FROM_ENV}
+        echo ${APP_NAME}
+        echo ${ENV_TYPE}
         if [ "${ENV_NAME}" == "prod" ] && [ "${ENABLE_JIRA_AUTOMATION}" == "true" ] ; then 
           declare -a version=($(aws ecr describe-images --repository-name ${APP_NAME}-main --image-ids imageTag=${FROM_ENV} --query "imageDetails[0].imageTags[?Value==${FROM_ENV}]" --output text))
           export RELEASE_VERSION=$${version[1]}
           curl --request POST --url $RELEASE_HOOK_URL --header "Content-Type:application/json" --data "{\"data\": {\"releaseVersion\":\"$RELEASE_VERSION\"}}" || echo "No Jira to change"
         fi
-      - |
-        echo ${ENV_NAME}
-        echo ${FROM_ENV}
-        echo ${APP_NAME}
-        echo ${ENV_TYPE}
