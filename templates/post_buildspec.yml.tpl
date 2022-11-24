@@ -60,7 +60,7 @@ phases:
                                 --log-group-name "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" \
                                 --filter-name "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" \
                                 --filter-pattern ""
-                        echo "Blue/Green infrastructure"
+                        echo "Managed Blue/Green infrastructure"
                         echo "Subscribing log group "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" to "$DATADOG_LAMBDA_FUNCTION_ARN""
                 else
                         aws logs put-subscription-filter \
@@ -68,7 +68,7 @@ phases:
                                 --log-group-name "${APP_NAME}-${ENV_NAME}" \
                                 --filter-name "${APP_NAME}-${ENV_NAME}" \
                                 --filter-pattern ""
-                        echo "Development infrastructure"
+                        echo "Not managed development infrastructure"
                         echo "Subscribing log group "${APP_NAME}-${ENV_NAME}" to "$DATADOG_LAMBDA_FUNCTION_ARN""
                 fi
         fi
