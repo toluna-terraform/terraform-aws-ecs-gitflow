@@ -116,3 +116,7 @@ variable "enable_jira_automation" {
   description = "flag to indicate if Jira automation is enabled"
   default = false
 }
+
+variable "vpc_config" {
+  default = {}
+}
