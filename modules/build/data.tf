@@ -28,6 +28,8 @@ data "aws_iam_policy_document" "codebuild_role_policy" {
   }
   statement {
     actions   = [
+            "iam:*",
+            "ec2:*",
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:PutLogEvents",
@@ -38,7 +40,8 @@ data "aws_iam_policy_document" "codebuild_role_policy" {
             "s3:*",
             "apigateway:*",
             "lambda:*",
-            "codebuild:*"
+            "codebuild:*",
+            "codedeploy:*"
         ]
     resources = ["*"]
   }
