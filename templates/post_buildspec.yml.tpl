@@ -5,10 +5,16 @@ env:
     BB_USER: "/app/bb_user"  
     BB_PASS: "/app/bb_app_pass"
     RELEASE_HOOK_URL: "/app/jira_release_hook"
+    CONSUL_PROJECT_ID: "/infra/${APP_NAME}-${ENV_TYPE}/consul_project_id"
+    CONSUL_HTTP_TOKEN: "/infra/${APP_NAME}-${ENV_TYPE}/consul_http_token"
 
 phases:
   pre_build:
     commands:
+      - yum install -y yum-utils
+      - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+      - yum -y install consul
+      - export CONSUL_HTTP_ADDR=https://consul-cluster-test.consul.$CONSUL_PROJECT_ID.aws.hashicorp.cloud
       - ECR_LOGIN=$(aws ecr get-login-password)
       - docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
       - CODEBUILD_RESOLVED_SOURCE_VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
@@ -43,9 +49,26 @@ phases:
           curl --request POST --url $RELEASE_HOOK_URL --header "Content-Type:application/json" --data "{\"data\": {\"releaseVersion\":\"$RELEASE_VERSION\"}}" || echo "No Jira to change"
         fi
       - |
-        CORALOGIX_APIKEY=$(aws ssm get-parameter --name /infra/coralogix-tags/apikey --with-decryption --query 'Parameter.Value' --output text) 
-        curl -X POST "https://webapi.coralogix.com/api/v1/external/tags" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $CORALOGIX_APIKEY" \
-        -H "maskValue: false" \
-        -d "{\"timestamp\":\""$(date +%s%N | cut -b1-13)"\",\"name\":\"${APP_NAME}-${ENV_NAME}-"$(date '+%Y-%m-%d')"\",\"application\":[\"${ENV_NAME}\"],\"subsystem\":[\"${APP_NAME}\"]}"
+        CURRENT_COLOR=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/current_color")
+        IS_MANAGED_ENV=$(consul kv get "terraform/${APP_NAME}/app-env.json"| jq '."${ENV_NAME}".is_managed_env')
+        DATADOG_LAMBDA_FUNCTION_ARN=$(aws lambda get-function --function-name "datadog-forwarder" --query 'Configuration.FunctionArn'  --output text)
+        if [ "$DATADOG_LAMBDA_FUNCTION_ARN" ]; then
+                echo "Datadog forwarder found $DATADOG_LAMBDA_FUNCTION_ARN"
+                if [ "$IS_MANAGED_ENV" = "true" ];then
+                        aws logs put-subscription-filter \
+                                --destination-arn "$DATADOG_LAMBDA_FUNCTION_ARN" \
+                                --log-group-name "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" \
+                                --filter-name "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" \
+                                --filter-pattern ""
+                        echo "Managed Blue/Green infrastructure"
+                        echo "Subscribing log group "${APP_NAME}-${ENV_NAME}-$CURRENT_COLOR" to "$DATADOG_LAMBDA_FUNCTION_ARN""
+                else
+                        aws logs put-subscription-filter \
+                                --destination-arn "$DATADOG_LAMBDA_FUNCTION_ARN" \
+                                --log-group-name "${APP_NAME}-${ENV_NAME}" \
+                                --filter-name "${APP_NAME}-${ENV_NAME}" \
+                                --filter-pattern ""
+                        echo "Not managed development infrastructure"
+                        echo "Subscribing log group "${APP_NAME}-${ENV_NAME}" to "$DATADOG_LAMBDA_FUNCTION_ARN""
+                fi
+        fi

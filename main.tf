@@ -4,6 +4,7 @@ locals {
   run_tests = var.run_integration_tests || var.run_stress_tests ? true : false
 }
 
+
 module "ci-cd-code-pipeline" {
   source                       = "./modules/ci-cd-codepipeline"
   env_name                     = var.env_name
@@ -70,6 +71,7 @@ module "code-deploy" {
   termination_wait_time_in_minutes = var.termination_wait_time_in_minutes
 }
 
+
 module "pre" {
   source                                = "./modules/pre"
   env_name                              = var.env_name
@@ -93,7 +95,6 @@ module "pre" {
 }
 
 
-
 module "post" {
   source                                = "./modules/post"
   env_name                              = var.env_name
@@ -114,6 +115,5 @@ module "post" {
     ENV_TYPE = var.env_type,
     ENABLE_JIRA_AUTOMATION = var.enable_jira_automation
     })
-
 }
 
