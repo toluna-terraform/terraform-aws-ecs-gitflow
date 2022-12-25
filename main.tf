@@ -117,4 +117,3 @@ module "post" {
     ENABLE_JIRA_AUTOMATION = var.enable_jira_automation
     })
 }
-
