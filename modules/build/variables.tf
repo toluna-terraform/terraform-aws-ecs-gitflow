@@ -54,3 +54,8 @@ variable "privileged_mode" {
 variable "vpc_config" {
   default = {}
 }
+
+variable "codebuild_env_instance_type" {
+    type = string
+    default = "BUILD_GENERAL1_SMALL"
+}

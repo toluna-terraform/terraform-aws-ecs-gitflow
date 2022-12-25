@@ -32,6 +32,7 @@ module "build" {
   env_type                              = var.env_type
   codebuild_name                        = "build-${var.app_name}"
   source_repository                     = var.source_repository
+  codebuild_env_instance_type           = var.codebuild_env_instance_type
   s3_bucket                             = local.artifacts_bucket_name
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
@@ -116,4 +117,3 @@ module "post" {
     ENABLE_JIRA_AUTOMATION = var.enable_jira_automation
     })
 }
-
