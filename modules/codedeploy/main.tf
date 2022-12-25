@@ -1,5 +1,5 @@
 resource "aws_codedeploy_app" "codedeploy_app" {
-  name = "ecs-deploy-${var.env_name}"
+  name = "ecs-deploy-${var.app_name}-${var.env_name}"
   compute_platform = "ECS"
 }
 
