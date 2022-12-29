@@ -33,6 +33,7 @@ data "aws_iam_policy_document" "codebuild_role_policy" {
             "logs:CreateLogStream",
             "logs:PutLogEvents",
             "ecr:*",
+            "kms:*",
             "ssm:*",
             "ecs:DescribeTaskDefinition",
             "cloudformation:*",
