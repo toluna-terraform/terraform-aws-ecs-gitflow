@@ -99,12 +99,6 @@ variable "pipeline_type" {
   type = string
 }
 
-variable "workspace_name" {
-  type = string
-  default = ""
-  nullable = true
-}
-
 variable "codebuild_env_instance_type" {
     type = string
     default = "BUILD_GENERAL1_SMALL"
