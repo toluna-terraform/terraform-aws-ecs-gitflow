@@ -42,7 +42,7 @@ module "build" {
   { APP_NAME = var.app_name,
     ENV_TYPE = var.env_type,
     ENV_NAME = var.env_name,
-    WORKSPACE_NAME = var.workspace_name
+    WORKSPACE_NAME = split("-", terraform.workspace)[0]
     PIPELINE_TYPE = var.pipeline_type,
     IMAGE_URI = var.pipeline_type == "dev" ? "${var.ecr_repo_url}:${var.env_name}" : local.image_uri, 
     DOCKERFILE_PATH = var.dockerfile_path, 
