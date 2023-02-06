@@ -14,6 +14,7 @@ phases:
       - yum install -y yum-utils
       - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
       - yum -y install consul
+      - yum -y install graphviz
       - export CONSUL_HTTP_ADDR=https://$CONSUL_URL
       - ECR_LOGIN=$(aws ecr get-login-password)
       - docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
@@ -72,3 +73,36 @@ phases:
                         echo "Subscribing log group "${APP_NAME}-${ENV_NAME}" to "$DATADOG_LAMBDA_FUNCTION_ARN""
                 fi
         fi
+      - |
+        wget -qO- https://github.com/cycloidio/inframap/releases/download/v0.6.7/inframap-linux-amd64.tar.gz | tar xvz
+        STATE_LAYERS=("app" "data" "shared")
+        for s in "${STATE_LAYERS[@]}"; do
+            if [ $s == "app" ]; then
+                DATA_WORKSPACE=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.data_workspace")
+                SHARED_LAYER=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.env_type")
+            fi
+            if [ $s == "data" ]; then
+                ENV_NAME=$DATA_WORKSPACE
+            elif [ $s == "shared" ]; then
+                ENV_NAME="shared-"$SHARED_LAYER
+            fi
+            CHECK=$(consul kv get "terraform/${APP_NAME}/${s}/state-env:${ENV_NAME}" | jq -r '."current-hash"')
+            if [ -z "$CHECK" ] || [ $CHECK == "null" ]; then
+                STATE=$(consul kv get "terraform/${APP_NAME}/${s}/state-env:${ENV_NAME}").
+                echo $STATE | jq | tee -a ${s}.tfstate >/dev/null
+            else
+                STATE=$(curl -sS "${CONSUL_HTTP_ADDR}/v1/kv/terraform/${APP_NAME}/${s}/state-env:${ENV_NAME}/?keys&token=${CONSUL_HTTP_TOKEN}")
+                SAMPLE=($(echo $STATE | jq -r ".[]" | sed 's/[{|}]//g' | tr ',' '\n' | sed 's/"//g'))
+                LAST_ELEMENT=$(echo ${SAMPLE[${#SAMPLE[@]}-1]})
+                FETCH_STATE=""
+                for row in $(echo "${STATE}" | jq -c '.[]'); do
+                    CHUNK=$(echo $row | jq -r ${1})
+                    FETCH_STATE=${FETCH_STATE}$(consul kv get "$CHUNK")
+                    if [ "$LAST_ELEMENT" = "$CHUNK" ]; then
+                        echo $FETCH_STATE | jq | tee -a ${s}.tfstate >/dev/null
+                    fi
+                done
+            fi
+            ./inframap-linux-amd64 generate ${s}.tfstate | dot -Tpng > ${s}_graph.png
+            aws s3 cp ${s}_graph.png s3://s3-codepipeline-${APP_NAME}-${SHARED_LAYER}/inframap/
+        done
