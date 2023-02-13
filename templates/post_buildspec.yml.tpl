@@ -79,9 +79,9 @@ phases:
                 fi
         fi
       - |
+        PIPELINE_TYPE=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.pipeline_type"  2>/dev/null)
         if [ "$PIPELINE_TYPE" == "cd" ]; then
           SHARED_LAYER=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.env_type"  2>/dev/null)
-          PIPELINE_TYPE=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.pipeline_type"  2>/dev/null)
           IS_MANAGED_ENV=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.is_managed_env"  2>/dev/null)
           if [ "$IS_MANAGED_ENV" = "true" ]; then
             CURRENT_COLOR=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/current_color" 2>/dev/null)
