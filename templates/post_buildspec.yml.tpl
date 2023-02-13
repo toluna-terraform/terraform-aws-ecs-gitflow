@@ -15,7 +15,12 @@ phases:
       - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
       - yum -y install consul
       - yum -y install graphviz
+      - wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+      - chmod +x ./jq
+      - cp jq /usr/bin
       - export CONSUL_HTTP_ADDR=https://$CONSUL_URL
+      - CONSUL_URI=$(echo $CONSUL_URL)
+      - CONSUL_TOKEN=$(echo $CONSUL_HTTP_TOKEN)
       - ECR_LOGIN=$(aws ecr get-login-password)
       - docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
       - CODEBUILD_RESOLVED_SOURCE_VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
@@ -74,35 +79,7 @@ phases:
                 fi
         fi
       - |
-        wget -qO- https://github.com/cycloidio/inframap/releases/download/v0.6.7/inframap-linux-amd64.tar.gz | tar xvz
-        STATE_LAYERS=("app" "data" "shared")
-        for s in "$${STATE_LAYERS[@]}"; do
-          if [ $s == "app" ]; then
-              DATA_WORKSPACE=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.data_workspace")
-              SHARED_LAYER=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.env_type")
-          fi
-          if [ $s == "data" ]; then
-              ENV_NAME=$DATA_WORKSPACE
-          elif [ $s == "shared" ]; then
-              ENV_NAME="shared-"$SHARED_LAYER
-          fi
-          CHECK=$(consul kv get "terraform/${APP_NAME}/$s/state-env:${ENV_NAME}" | jq -r '."current-hash"')
-          if [ -z "$CHECK" ] || [ $CHECK == "null" ]; then
-              STATE=$(consul kv get "terraform/${APP_NAME}/$s/state-env:${ENV_NAME}")
-              echo $STATE | jq | tee -a "$s".tfstate >/dev/null
-          else
-              STATE=$(curl -sS "$CONSUL_HTTP_ADDR/v1/kv/terraform/${APP_NAME}/$s/state-env:${ENV_NAME}/?keys&token=$CONSUL_HTTP_TOKEN")
-              KEYS=$(echo $STATE | jq -r '.' | tr -d '[],"')
-              KEYS=($(echo $STATE | jq -r '.' | tr -d '[]," '))
-              LAST_ELEMENT=$(echo $${KEYS[$${#KEYS[@]}-1]})
-              FETCH_STATE=""
-              for row in "$${KEYS[@]}"; do
-                  FETCH_STATE=$${FETCH_STATE}$(consul kv get "$row")
-                  if [ "$LAST_ELEMENT" = "$row" ]; then
-                      echo $FETCH_STATE | jq | tee -a "$s".tfstate >/dev/null
-                  fi
-              done
-          fi
-          ./inframap-linux-amd64 generate "$s".tfstate | dot -Tpng > "$s"_graph.png
-          aws s3 cp "$s"_graph.png s3://s3-codepipeline-${APP_NAME}-$SHARED_LAYER/inframap/
-        done
+        SHARED_LAYER=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.env_type")
+        aws s3api get-object --bucket s3-codepipeline-backstage-$SHARED_LAYER --key inframap/test2.sh test2.sh
+      - chmod +x test2.sh
+      - sh test2.sh "${APP_NAME}" "${ENV_NAME}" "$CONSUL_URI" "${CONSUL_TOKEN}"
