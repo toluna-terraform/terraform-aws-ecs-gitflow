@@ -56,7 +56,7 @@ phases:
         fi
       - |
         CURRENT_COLOR=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/current_color")
-        IS_MANAGED_ENV=$(consul kv get "terraform/${APP_NAME}/app-env.json"| jq '."${ENV_NAME}".is_managed_env')
+        IS_MANAGED_ENV=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq '."${ENV_NAME}".is_managed_env')
         DATADOG_LAMBDA_FUNCTION_ARN=$(aws lambda get-function --function-name "datadog-forwarder" --query 'Configuration.FunctionArn'  --output text)
         if [ "$DATADOG_LAMBDA_FUNCTION_ARN" ]; then
                 echo "Datadog forwarder found $DATADOG_LAMBDA_FUNCTION_ARN"
@@ -79,11 +79,13 @@ phases:
                 fi
         fi
       - |
-        SHARED_LAYER=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.env_type"  2>/dev/null)
-        PIPELINE_TYPE=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.pipeline_type"  2>/dev/null)
-        CURRENT_COLOR=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/current_color" 2>/dev/null)
-      - |
         if [ "$PIPELINE_TYPE" == "cd" ]; then
+          SHARED_LAYER=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.env_type"  2>/dev/null)
+          PIPELINE_TYPE=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.pipeline_type"  2>/dev/null)
+          IS_MANAGED_ENV=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.is_managed_env"  2>/dev/null)
+          if [ "$IS_MANAGED_ENV" = "true" ]; then
+            CURRENT_COLOR=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/current_color" 2>/dev/null)
+          fi
           aws s3api get-object --bucket s3-codepipeline-backstage-$SHARED_LAYER --key inframap/generator.sh generator.sh
           chmod +x generator.sh
           sh generator.sh "${APP_NAME}" "${ENV_NAME}" "$CURRENT_COLOR" "$CONSUL_URI" "$CONSUL_TOKEN"
