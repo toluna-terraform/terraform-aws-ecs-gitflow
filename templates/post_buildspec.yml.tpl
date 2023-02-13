@@ -80,6 +80,10 @@ phases:
         fi
       - |
         SHARED_LAYER=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.env_type")
-        aws s3api get-object --bucket s3-codepipeline-backstage-$SHARED_LAYER --key inframap/test2.sh test2.sh
-      - chmod +x test2.sh
-      - sh test2.sh "${APP_NAME}" "${ENV_NAME}" "$CONSUL_URI" "$CONSUL_TOKEN"
+        PIPELINE_TYPE=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.pipeline_type")
+      - |
+        if [ "$PIPELINE_TYPE" == "cd" ]; then
+          aws s3api get-object --bucket s3-codepipeline-backstage-$SHARED_LAYER --key inframap/generator.sh generator.sh
+          chmod +x generator.sh
+          sh generator.sh "${APP_NAME}" "${ENV_NAME}" "$CONSUL_URI" "$CONSUL_TOKEN"
+        fi
