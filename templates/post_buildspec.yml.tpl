@@ -79,9 +79,9 @@ phases:
                 fi
         fi
       - |
-        SHARED_LAYER=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.env_type")
-        PIPELINE_TYPE=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.pipeline_type")
-        CURRENT_COLOR=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/current_color")
+        SHARED_LAYER=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.env_type"  2>/dev/null)
+        PIPELINE_TYPE=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.pipeline_type"  2>/dev/null)
+        CURRENT_COLOR=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/current_color" 2>/dev/null)
       - |
         if [ "$PIPELINE_TYPE" == "cd" ]; then
           aws s3api get-object --bucket s3-codepipeline-backstage-$SHARED_LAYER --key inframap/generator.sh generator.sh
