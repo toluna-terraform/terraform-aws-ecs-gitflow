@@ -24,7 +24,7 @@ resource "aws_codepipeline" "codepipeline" {
       configuration = {
         S3Bucket = "${var.s3_bucket}"
         S3ObjectKey = "${var.env_name}/source_artifacts.zip" 
-        PollForSourceChanges = true
+        PollForSourceChanges = false
       }
     }
   }
@@ -133,3 +133,27 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   policy = data.aws_iam_policy_document.codepipeline_role_policy.json
 }
 
+resource "aws_cloudwatch_event_rule" "trigger_pipeline" {
+  name        = "${local.codepipeline_name}-trigger"
+  description = "Trigger ${local.codepipeline_name}"
+
+  event_pattern = jsonencode({
+    "source" : ["aws.s3"],
+    "detail-type" : ["AWS API Call via CloudTrail"],
+    "detail" : {
+      "eventSource" : ["s3.amazonaws.com"],
+      "eventName" : ["PutObject", "CompleteMultipartUpload", "CopyObject"],
+      "requestParameters" : {
+        "bucketName" : ["${var.s3_bucket}"],
+        "key" : ["${var.env_name}/source_artifacts.zip"]
+      }
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "trigger_pipeline" {
+  rule      = aws_cloudwatch_event_rule.trigger_pipeline.name
+  target_id = "${local.codepipeline_name}"
+  arn       = aws_codepipeline.codepipeline.arn
+  role_arn = aws_iam_role.codepipeline_role.arn
+}
