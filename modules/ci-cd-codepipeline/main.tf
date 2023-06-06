@@ -157,3 +157,23 @@ resource "aws_cloudwatch_event_target" "trigger_pipeline" {
   arn       = aws_codepipeline.codepipeline.arn
   role_arn = aws_iam_role.codepipeline_role.arn
 }
+
+resource "aws_cloudwatch_log_group" "trigger_pipeline" {
+  name = aws_cloudwatch_event_rule.trigger_pipeline.name
+  retention_in_days = 3
+}
+
+resource "aws_cloudtrail" "trigger_pipeline" {
+  name = "${local.codepipeline_name}-cloud-trail"
+  s3_bucket_name = "${var.s3_bucket}"
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.trigger_pipeline.arn}:*"
+  event_selector {
+    read_write_type           = "WriteOnly"
+    include_management_events = true
+
+    data_resource {
+      type   = "AWS::S3::Object"
+      values = ["arn:aws:s3:::${var.s3_bucket}/${var.env_name}/source_artifacts.zip"]
+    }
+  }
+}
