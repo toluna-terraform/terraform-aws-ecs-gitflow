@@ -15,7 +15,7 @@ data "aws_iam_policy_document" "codepipeline_assume_role_policy" {
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
-      identifiers = ["codepipeline.amazonaws.com", "codedeploy.amazonaws.com" ]
+      identifiers = ["codepipeline.amazonaws.com", "codedeploy.amazonaws.com" , "events.amazonaws.com"]
     }
   }
 }
@@ -28,6 +28,12 @@ data "aws_iam_policy_document" "codepipeline_role_policy" {
       "s3:GetBucketVersioning",
       "s3:PutObjectAcl",
       "s3:PutObject"
+    ]
+    resources = ["*"]
+  }
+  statement {
+    actions = [
+      "codepipeline:StartPipelineExecution"
     ]
     resources = ["*"]
   }
@@ -46,11 +52,6 @@ data "aws_iam_policy_document" "codepipeline_role_policy" {
   statement {
     actions = [
       "codedeploy:*"
-      # "codedeploy:CreateDeployment",
-      # "codedeploy:GetApplicationRevision",
-      # "codedeploy:GetDeployment",
-      # "codedeploy:GetDeploymentConfig",
-      # "codedeploy:RegisterApplicationRevision"
     ]
     resources = ["*"]
   }
