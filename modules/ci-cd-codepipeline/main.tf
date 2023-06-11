@@ -24,7 +24,7 @@ resource "aws_codepipeline" "codepipeline" {
       configuration = {
         S3Bucket = "${var.s3_bucket}"
         S3ObjectKey = "${var.env_name}/source_artifacts.zip" 
-        PollForSourceChanges = true
+        PollForSourceChanges = false
       }
     }
   }
@@ -88,7 +88,7 @@ resource "aws_codepipeline" "codepipeline" {
         version         = "1"
         configuration = {
           ApplicationName = action.value
-          DeploymentGroupName = "ecs-deploy-group-${var.env_name}"
+          DeploymentGroupName = "ecs-deploy-group-${var.app_name}-${var.env_name}"
           TaskDefinitionTemplateArtifact = var.pipeline_type == "dev" ? "dev_output" : "cd_output"
           TaskDefinitionTemplatePath = "taskdef.json"
           AppSpecTemplateArtifact = var.pipeline_type == "dev" ? "dev_output" : "cd_output"

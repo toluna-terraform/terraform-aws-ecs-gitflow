@@ -1,5 +1,5 @@
 resource "aws_codedeploy_app" "codedeploy_app" {
-  name = "ecs-deploy-${var.env_name}"
+  name = "ecs-deploy-${var.app_name}-${var.env_name}"
   compute_platform = "ECS"
 }
 
@@ -7,7 +7,7 @@ resource "aws_codedeploy_app" "codedeploy_app" {
 resource "aws_codedeploy_deployment_group" "deployment_group" {
   app_name               = aws_codedeploy_app.codedeploy_app.name
   deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
-  deployment_group_name  = "ecs-deploy-group-${var.env_name}"
+  deployment_group_name  = "ecs-deploy-group-${var.app_name}-${var.env_name}"
   service_role_arn       = aws_iam_role.codedeploy_role.arn
 
   auto_rollback_configuration {

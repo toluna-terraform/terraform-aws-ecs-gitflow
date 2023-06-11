@@ -5,7 +5,7 @@ env:
     BB_USER: "/app/bb_user"  
     BB_PASS: "/app/bb_app_pass"
     RELEASE_HOOK_URL: "/app/jira_release_hook"
-    CONSUL_PROJECT_ID: "/infra/${APP_NAME}-${ENV_TYPE}/consul_project_id"
+    CONSUL_URL: "/infra/consul_url"
     CONSUL_HTTP_TOKEN: "/infra/${APP_NAME}-${ENV_TYPE}/consul_http_token"
 
 phases:
@@ -14,7 +14,7 @@ phases:
       - yum install -y yum-utils
       - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
       - yum -y install consul
-      - export CONSUL_HTTP_ADDR=https://consul-cluster-test.consul.$CONSUL_PROJECT_ID.aws.hashicorp.cloud
+      - export CONSUL_HTTP_ADDR=https://$CONSUL_URL
       - ECR_LOGIN=$(aws ecr get-login-password)
       - docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
       - CODEBUILD_RESOLVED_SOURCE_VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
@@ -39,7 +39,7 @@ phases:
   post_build:
     commands:
       - |
-        REPORT_URL="https://console.aws.amazon.com/codesuite/codedeploy/applications/ecs-deploy-${ENV_NAME}/deployment-groups/ecs-deploy-group-${ENV_NAME}"
+        REPORT_URL="https://console.aws.amazon.com/codesuite/codedeploy/applications/ecs-deploy-${APP_NAME}-${ENV_NAME}/deployment-groups/ecs-deploy-group-${APP_NAME}-${ENV_NAME}"
         URL="https://api.bitbucket.org/2.0/repositories/tolunaengineering/${APP_NAME}/commit/$COMMIT_ID/statuses/build/"
         curl --request POST --url $URL -u "$BB_USER:$BB_PASS" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"    
       - |

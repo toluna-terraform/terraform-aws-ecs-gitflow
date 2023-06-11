@@ -99,6 +99,11 @@ variable "pipeline_type" {
   type = string
 }
 
+variable "codebuild_env_instance_type" {
+    type = string
+    default = "BUILD_GENERAL1_SMALL"
+}
+
 variable "termination_wait_time_in_minutes" {
   default = 120
 }

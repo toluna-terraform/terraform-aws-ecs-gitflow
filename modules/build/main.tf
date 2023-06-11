@@ -2,7 +2,6 @@ locals {
   codebuild_name = "codebuild-${var.codebuild_name}-${var.env_name}"
 }
 
-
 resource "aws_codebuild_project" "codebuild" {
   name          = local.codebuild_name
   description   = "Build spec for ${local.codebuild_name}"
@@ -16,7 +15,7 @@ resource "aws_codebuild_project" "codebuild" {
   }
 
   environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
+    compute_type                =  var.codebuild_env_instance_type
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
