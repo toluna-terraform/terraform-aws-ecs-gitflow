@@ -114,6 +114,7 @@ module "post" {
     FROM_ENV = var.from_env,
     APP_NAME = var.app_name,
     ENV_TYPE = var.env_type,
-    ENABLE_JIRA_AUTOMATION = var.enable_jira_automation
+    ENABLE_JIRA_AUTOMATION = var.enable_jira_automation,
+    SOURCE_REPOSITORY = var.source_repository
     })
 }
