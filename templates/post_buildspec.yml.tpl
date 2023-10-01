@@ -40,7 +40,7 @@ phases:
     commands:
       - |
         REPORT_URL="https://console.aws.amazon.com/codesuite/codedeploy/applications/ecs-deploy-${APP_NAME}-${ENV_NAME}/deployment-groups/ecs-deploy-group-${APP_NAME}-${ENV_NAME}"
-        URL="https://api.bitbucket.org/2.0/repositories/tolunaengineering/${APP_NAME}/commit/$COMMIT_ID/statuses/build/"
+        URL="https://api.bitbucket.org/2.0/repositories/${SOURCE_REPOSITORY}/commit/$COMMIT_ID/statuses/build/"
         curl --request POST --url $URL -u "$BB_USER:$BB_PASS" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"    
       - |
         if [ "${ENV_NAME}" == "prod" ] && [ "${ENABLE_JIRA_AUTOMATION}" == "true" ] ; then 
