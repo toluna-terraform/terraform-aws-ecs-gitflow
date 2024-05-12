@@ -25,16 +25,25 @@ phases:
   build:
     commands:
       - |
-         if [ "$SRC_CHANGED" = "true" ]; then
-           DEPLOYED_TAG="${FROM_ENV}";
-           MANIFEST=$(aws ecr batch-get-image --repository-name ${ECR_REPO_NAME} --image-ids imageTag=$DEPLOYED_TAG --output json | jq --raw-output '.images[0].imageManifest')
-           aws ecr put-image --repository-name ${ECR_REPO_NAME} --image-tag "${ENV_NAME}" --image-manifest "$MANIFEST" || true
-         fi
+        FULL_REGISTERY_NAME="${ECR_REPO_URL}"
+        REGISTRY_ID="$${FULL_REGISTERY_NAME%%.*}"
       - |
-         if [ "$SRC_CHANGED" = "false" ]; then
-           DEPLOYED_TAG="${ENV_NAME}";
-           echo "Image already has $DEPLOYED_TAG tag."
-         fi
+        if [ "${PIPELINE_TYPE}" = "cd" ] && [ "$SRC_CHANGED" = "true" ]; then
+          DEPLOYED_TAG="${FROM_ENV}"
+          MANIFEST=$(aws ecr batch-get-image --repository-name ${ECR_REPO_NAME} --registry-id $REGISTRY_ID --image-ids imageTag=$DEPLOYED_TAG --output json | jq --raw-output '.images[0].imageManifest')
+          aws ecr put-image --repository-name ${ECR_REPO_NAME} --image-tag "${ENV_NAME}" --registry-id $REGISTRY_ID --image-manifest "$MANIFEST" || true
+        fi
+      - |
+        if [ "$SRC_CHANGED" = "true" ] && [ "${PIPELINE_TYPE}" != "cd" ]; then
+          DEPLOYED_TAG="$(cat $CODEBUILD_SRC_DIR_ci_output/new_version.txt)"
+          MANIFEST=$(aws ecr batch-get-image --repository-name ${ECR_REPO_NAME} --registry-id $REGISTRY_ID --image-ids imageTag=$DEPLOYED_TAG --output json | jq --raw-output '.images[0].imageManifest')
+          aws ecr put-image --repository-name ${ECR_REPO_NAME} --image-tag "${ENV_NAME}" --registry-id $REGISTRY_ID --image-manifest "$MANIFEST" || true
+        fi
+      - |
+        if [ "$SRC_CHANGED" = "false" ] && [ "${PIPELINE_TYPE}" != "cd" ]; then
+          DEPLOYED_TAG="${ENV_NAME}";
+          echo "Image already has $DEPLOYED_TAG tag."
+        fi
 
   post_build:
     commands:
@@ -44,7 +53,7 @@ phases:
         curl --request POST --url $URL -u "$BB_USER:$BB_PASS" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"    
       - |
         if [ "${ENV_NAME}" == "prod" ] && [ "${ENABLE_JIRA_AUTOMATION}" == "true" ] ; then 
-          declare -a version=($(aws ecr describe-images --repository-name ${APP_NAME}-main --image-ids imageTag=${FROM_ENV} --query "imageDetails[0].imageTags[?Value==${FROM_ENV}]" --output text))
+          declare -a version=($(aws ecr describe-images --repository-name ${APP_NAME} --image-ids imageTag=${FROM_ENV} --query "imageDetails[0].imageTags[?Value==${FROM_ENV}]" --output text))
           export RELEASE_VERSION=$${version[1]}
           curl --request POST --url $RELEASE_HOOK_URL --header "Content-Type:application/json" --data "{\"data\": {\"releaseVersion\":\"$RELEASE_VERSION\"}}" || echo "No Jira to change"
         fi
