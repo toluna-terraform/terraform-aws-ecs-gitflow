@@ -116,5 +116,6 @@ module "post" {
     ENV_TYPE = var.env_type,
     ENABLE_JIRA_AUTOMATION = var.enable_jira_automation,
     SOURCE_REPOSITORY = var.source_repository
+    PIPELINE_TYPE = var.pipeline_type
     })
 }
