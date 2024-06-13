@@ -14,7 +14,13 @@ phases:
       - yum install -y yum-utils
       - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
       - yum -y install consul
+      - yum -y install graphviz
+      - wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+      - chmod +x ./jq
+      - cp jq /usr/bin
       - export CONSUL_HTTP_ADDR=https://$CONSUL_URL
+      - CONSUL_URI=$(echo $CONSUL_URL)
+      - CONSUL_TOKEN=$(echo $CONSUL_HTTP_TOKEN)
       - ECR_LOGIN=$(aws ecr get-login-password)
       - docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
       - CODEBUILD_RESOLVED_SOURCE_VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
@@ -59,7 +65,7 @@ phases:
         fi
       - |
         CURRENT_COLOR=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/current_color")
-        IS_MANAGED_ENV=$(consul kv get "terraform/${APP_NAME}/app-env.json"| jq '."${ENV_NAME}".is_managed_env')
+        IS_MANAGED_ENV=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq '."${ENV_NAME}".is_managed_env')
         DATADOG_LAMBDA_FUNCTION_ARN=$(aws lambda get-function --function-name "datadog-forwarder" --query 'Configuration.FunctionArn'  --output text)
         if [ "$DATADOG_LAMBDA_FUNCTION_ARN" ]; then
                 echo "Datadog forwarder found $DATADOG_LAMBDA_FUNCTION_ARN"
@@ -80,4 +86,16 @@ phases:
                         echo "Not managed development infrastructure"
                         echo "Subscribing log group "${APP_NAME}-${ENV_NAME}" to "$DATADOG_LAMBDA_FUNCTION_ARN""
                 fi
+        fi
+      - |
+        PIPELINE_TYPE=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.pipeline_type"  2>/dev/null)
+        if [ "$PIPELINE_TYPE" == "cd" ]; then
+          SHARED_LAYER=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.env_type"  2>/dev/null)
+          IS_MANAGED_ENV=$(consul kv get "terraform/${APP_NAME}/app-env.json" | jq -r ".${ENV_NAME}.is_managed_env"  2>/dev/null)
+          if [ "$IS_MANAGED_ENV" = "true" ]; then
+            CURRENT_COLOR=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/current_color" 2>/dev/null)
+          fi
+          aws s3api get-object --bucket s3-codepipeline-backstage-$SHARED_LAYER --key inframap/generator.sh generator.sh
+          chmod +x generator.sh
+          sh generator.sh "${APP_NAME}" "${ENV_NAME}" "$CURRENT_COLOR" "$CONSUL_URI" "$CONSUL_TOKEN"
         fi
