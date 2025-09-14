@@ -2,19 +2,15 @@ version: 0.2
 
 env:
   parameter-store:
-    BB_USER: "/app/bb_user"  
+    BB_USER: "/app/bb_user"
     BB_PASS: "/app/bb_app_pass"
     RELEASE_HOOK_URL: "/app/jira_release_hook"
-    CONSUL_URL: "/infra/consul_url"
-    CONSUL_HTTP_TOKEN: "/infra/${APP_NAME}-${ENV_TYPE}/consul_http_token"
 
 phases:
   pre_build:
     commands:
       - yum install -y yum-utils
       - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
-      - yum -y install consul
-      - export CONSUL_HTTP_ADDR=https://$CONSUL_URL
       - ECR_LOGIN=$(aws ecr get-login-password)
       - docker login --username AWS --password $ECR_LOGIN ${ECR_REPO_URL}
       - CODEBUILD_RESOLVED_SOURCE_VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
@@ -50,16 +46,16 @@ phases:
       - |
         REPORT_URL="https://console.aws.amazon.com/codesuite/codedeploy/applications/ecs-deploy-${APP_NAME}-${ENV_NAME}/deployment-groups/ecs-deploy-group-${APP_NAME}-${ENV_NAME}"
         URL="https://api.bitbucket.org/2.0/repositories/${SOURCE_REPOSITORY}/commit/$COMMIT_ID/statuses/build/"
-        curl --request POST --url $URL -u "$BB_USER:$BB_PASS" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"    
+        curl --request POST --url $URL -u "$BB_USER:$BB_PASS" --header "Accept:application/json" --header "Content-Type:application/json" --data "{\"key\":\"${APP_NAME} Deploy\",\"state\":\"SUCCESSFUL\",\"description\":\"Deployment to ${ENV_NAME} succeeded\",\"url\":\"$REPORT_URL\"}"
       - |
-        if [ "${ENV_NAME}" == "prod" ] && [ "${ENABLE_JIRA_AUTOMATION}" == "true" ] ; then 
+        if [ "${ENV_NAME}" == "prod" ] && [ "${ENABLE_JIRA_AUTOMATION}" == "true" ] ; then
           declare -a version=($(aws ecr describe-images --repository-name ${APP_NAME} --image-ids imageTag=${FROM_ENV} --query "imageDetails[0].imageTags[?Value==${FROM_ENV}]" --output text))
           export RELEASE_VERSION=$${version[1]}
           curl --request POST --url $RELEASE_HOOK_URL --header "Content-Type:application/json" --data "{\"data\": {\"releaseVersion\":\"$RELEASE_VERSION\"}}" || echo "No Jira to change"
         fi
       - |
-        CURRENT_COLOR=$(consul kv get "infra/${APP_NAME}-${ENV_NAME}/current_color")
-        IS_MANAGED_ENV=$(consul kv get "terraform/${APP_NAME}/app-env.json"| jq '."${ENV_NAME}".is_managed_env')
+        CURRENT_COLOR=$(aws s3 cp "s3://${TRIBE_STATE_BUCKET}/infra/${APP_NAME}-${ENV_NAME}/current_color" -)
+        IS_MANAGED_ENV=$(aws s3 cp "s3://${TRIBE_CONFIG_BUCKET}/terraform/${APP_NAME}/app-env.json" - | jq '."${ENV_NAME}".is_managed_env')
         DATADOG_LAMBDA_FUNCTION_ARN=$(aws lambda get-function --function-name "datadog-forwarder" --query 'Configuration.FunctionArn'  --output text)
         if [ "$DATADOG_LAMBDA_FUNCTION_ARN" ]; then
                 echo "Datadog forwarder found $DATADOG_LAMBDA_FUNCTION_ARN"

@@ -37,17 +37,17 @@ module "build" {
   environment_variables_parameter_store = var.environment_variables_parameter_store
   vpc_config                            = var.vpc_config
   environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}", HOOKS = local.run_tests, PIPELINE_TYPE = var.pipeline_type})}) //TODO: try to replace with file
-  buildspec_file                        = templatefile("buildspec.yml.tpl", 
+  buildspec_file                        = templatefile("buildspec.yml.tpl",
   { APP_NAME = var.app_name,
     ENV_TYPE = var.env_type,
     ENV_NAME = var.env_name,
     PIPELINE_TYPE = var.pipeline_type,
-    IMAGE_URI = var.pipeline_type == "dev" ? "${var.ecr_repo_url}:${var.env_name}" : local.image_uri, 
-    DOCKERFILE_PATH = var.dockerfile_path, 
-    ECR_REPO_URL = var.ecr_repo_url, 
+    IMAGE_URI = var.pipeline_type == "dev" ? "${var.ecr_repo_url}:${var.env_name}" : local.image_uri,
+    DOCKERFILE_PATH = var.dockerfile_path,
+    ECR_REPO_URL = var.ecr_repo_url,
     ECR_REPO_NAME = var.ecr_repo_name,
-    TASK_DEF_NAME = var.task_def_name, 
-    ADO_USER = data.aws_ssm_parameter.ado_user.value, 
+    TASK_DEF_NAME = var.task_def_name,
+    ADO_USER = data.aws_ssm_parameter.ado_user.value,
     ADO_PASSWORD = data.aws_ssm_parameter.ado_password.value,
     TEST_REPORT = var.test_report_group,
     CODE_COVERAGE_REPORT = var.coverage_report_group,
@@ -83,15 +83,15 @@ module "pre" {
   privileged_mode                       = true
   environment_variables_parameter_store = var.environment_variables_parameter_store
   environment_variables                 = merge(var.environment_variables, { APPSPEC = templatefile("${path.module}/templates/appspec.json.tpl", { APP_NAME = "${var.app_name}", ENV_TYPE = "${var.env_type}", HOOKS = var.run_integration_tests, PIPELINE_TYPE = var.pipeline_type})})
-  buildspec_file                        = templatefile("${path.module}/templates/pre_buildspec.yml.tpl", 
+  buildspec_file                        = templatefile("${path.module}/templates/pre_buildspec.yml.tpl",
   { ENV_NAME = var.env_name,
     APP_NAME = var.app_name,
     ENV_TYPE = var.env_type,
     PIPELINE_TYPE = var.pipeline_type,
     FROM_ENV = var.from_env,
-    ECR_REPO_URL = var.ecr_repo_url, 
+    ECR_REPO_URL = var.ecr_repo_url,
     ECR_REPO_NAME = var.ecr_repo_name,
-    TASK_DEF_NAME = var.task_def_name 
+    TASK_DEF_NAME = var.task_def_name
     })
 }
 
@@ -107,8 +107,8 @@ module "post" {
   environment_variables_parameter_store = var.environment_variables_parameter_store
   enable_jira_automation                = var.enable_jira_automation
 
-  buildspec_file                        = templatefile("${path.module}/templates/post_buildspec.yml.tpl", 
-  { ECR_REPO_URL = var.ecr_repo_url, 
+  buildspec_file                        = templatefile("${path.module}/templates/post_buildspec.yml.tpl",
+  { ECR_REPO_URL = var.ecr_repo_url,
     ECR_REPO_NAME = var.ecr_repo_name,
     ENV_NAME = split("-",var.env_name)[0],
     FROM_ENV = var.from_env,
@@ -116,6 +116,8 @@ module "post" {
     ENV_TYPE = var.env_type,
     ENABLE_JIRA_AUTOMATION = var.enable_jira_automation,
     SOURCE_REPOSITORY = var.source_repository
-    PIPELINE_TYPE = var.pipeline_type
+    PIPELINE_TYPE = var.pipeline_type,
+    TRIBE_STATE_BUCKET  = "toluna-${var.tribe}-tf-state-data"
+    TRIBE_CONFIG_BUCKET  = "toluna-${var.tribe}-tf-config-data"
     })
 }
