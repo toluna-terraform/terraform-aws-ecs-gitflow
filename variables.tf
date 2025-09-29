@@ -25,7 +25,7 @@ variable "run_stress_tests" {
 }
 
 variable "ecr_repo_url" {
-    type = string 
+    type = string
 }
 
 variable "ecr_registry_id" {
@@ -46,7 +46,7 @@ variable "trigger_branch" {
 
 variable "dockerfile_path" {
     type = string
-} 
+}
 
  variable "ecs_cluster_name" {
      type = string
@@ -63,7 +63,7 @@ variable "alb_listener_arn" {
 variable "alb_test_listener_arn" {
      type = string
  }
- 
+
 variable "alb_tg_blue_name" {
      type = string
  }
@@ -124,4 +124,8 @@ variable "enable_jira_automation" {
 
 variable "vpc_config" {
   default = {}
+}
+
+variable "tribe" {
+  type = string
 }
