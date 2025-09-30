@@ -55,7 +55,7 @@ phases:
         fi
       - |
         CURRENT_COLOR=$(aws s3 cp "s3://${TRIBE_STATE_BUCKET}/infra/${APP_NAME}-${ENV_NAME}/current_color" - || echo "")
-        IS_MANAGED_ENV=$(aws s3 cp "s3://${TRIBE_CONFIG_BUCKET}/terraform/${APP_NAME}/app-env.json" - | jq '."${ENV_NAME}".is_managed_env')
+        IS_MANAGED_ENV=$(aws s3 cp "s3://${TRIBE_CONFIG_BUCKET}/${APP_NAME}/app-env.json" - | jq '."${ENV_NAME}".is_managed_env')
         DATADOG_LAMBDA_FUNCTION_ARN=$(aws lambda get-function --function-name "datadog-forwarder" --query 'Configuration.FunctionArn'  --output text)
         if [ "$DATADOG_LAMBDA_FUNCTION_ARN" ]; then
                 echo "Datadog forwarder found $DATADOG_LAMBDA_FUNCTION_ARN"
